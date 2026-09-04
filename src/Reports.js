@@ -717,23 +717,29 @@ export default function Reports() {
               { header: "Presenza", dataKey: "presenza" },
               { header: "Note", dataKey: "note" },
             ],
-            data: attendanceData.map((record) => {
-              const athlete = athleteMap.get(record.athleteId);
-              return {
-                nome: athlete?.name || record.athleteName?.split(" ")[0] || "",
-                cognome:
-                  athlete?.lastName || record.athleteName?.split(" ")[1] || "",
-                tipologia: athlete?.type || "",
-                categoria: record.category || (athlete ? athlete.category : ""),
-                data: formatDate(record.date),
-                evento:
-                  record.type === "gara"
-                    ? `Gara - ${record.eventName}`
-                    : "Allenamento",
-                presenza: record.present,
-                note: record.notes || "",
-              };
-            }),
+            data: [...attendanceData]
+              .sort((a, b) => toJsDate(a.date) - toJsDate(b.date))
+              .map((record) => {
+                const athlete = athleteMap.get(record.athleteId);
+                return {
+                  nome:
+                    athlete?.name || record.athleteName?.split(" ")[0] || "",
+                  cognome:
+                    athlete?.lastName ||
+                    record.athleteName?.split(" ")[1] ||
+                    "",
+                  tipologia: athlete?.type || "",
+                  categoria:
+                    record.category || (athlete ? athlete.category : ""),
+                  data: formatDate(record.date),
+                  evento:
+                    record.type === "gara"
+                      ? `Gara - ${record.eventName}`
+                      : "Allenamento",
+                  presenza: record.present,
+                  note: record.notes || "",
+                };
+              }),
           };
 
         default:
