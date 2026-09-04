@@ -66,6 +66,9 @@ export default function Reports() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [athleteSearch, setAthleteSearch] = useState("");
+  const [showArchivedAthletes, setShowArchivedAthletes] = useState(false);
+  const [isAthleteDropdownOpen, setIsAthleteDropdownOpen] = useState(false);
+  const athleteDropdownRef = React.useRef(null);
 
   // Stati per i dati
   const [athletes, setAthletes] = useState([]);
@@ -154,8 +157,24 @@ export default function Reports() {
 
     const hasClothing = reportType === "clothing" ? athlete.clothing : true;
 
-    return matchesSearch && matchesType && hasClothing;
+    const matchesArchived = showArchivedAthletes ? true : !athlete.archived;
+
+    return matchesSearch && matchesType && hasClothing && matchesArchived;
   });
+
+  // Chiude il menu a tendina atleti quando si clicca fuori
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        athleteDropdownRef.current &&
+        !athleteDropdownRef.current.contains(event.target)
+      ) {
+        setIsAthleteDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // useEffect hooks per caricare dati iniziali
   useEffect(() => {
@@ -727,70 +746,266 @@ export default function Reports() {
   };
 
   // Export to PDF
+  //
+  // Migliorie estetiche rispetto alla versione precedente:
+  // - Orientamento automatico landscape/portrait in base al numero di colonne,
+  //   per sfruttare meglio lo spazio orizzontale con tabelle "larghe".
+  // - Dimensione font e padding calcolati dinamicamente in base al numero di
+  //   righe, per far entrare la tabella in una sola pagina quando possibile
+  //   senza scendere sotto una soglia di leggibilità (6pt); oltre quella
+  //   soglia si accetta l'impaginazione multi-pagina.
+  // - Intestazione con fascia colorata, riepilogo periodo/atleti più leggibile,
+  //   righe zebrate e footer con numero di pagina + data generazione su ogni
+  //   pagina (via didDrawPage, così si ripete automaticamente).
+  const BRAND_COLOR = [37, 99, 235]; // #2563eb, colore dominante dell'app
+  const BRAND_COLOR_DARK = [30, 64, 175]; // #1e40af
+
+  const PRESENCE_COLORS = {
+    Presente: { fill: [34, 197, 94], text: [255, 255, 255] }, // verde
+    Assente: { fill: [239, 68, 68], text: [255, 255, 255] }, // rosso
+    "Assente Giustificato": { fill: [249, 115, 22], text: [255, 255, 255] }, // arancione
+    Ritardo: { fill: [250, 204, 21], text: [66, 44, 6] }, // giallo
+    "Uscita Anticipata": { fill: [96, 165, 250], text: [255, 255, 255] }, // azzurro
+  };
+  const PRESENCE_COLOR_DEFAULT = { fill: [209, 213, 219], text: [55, 65, 81] }; // grigio, per valori non previsti
+
+  const drawPdfFooter = (doc, pageWidth, pageHeight, marginX) => {
+    const pageCount = doc.internal.getNumberOfPages();
+    const currentPage = doc.internal.getCurrentPageInfo
+      ? doc.internal.getCurrentPageInfo().pageNumber
+      : pageCount;
+    doc.setFontSize(8);
+    doc.setTextColor(140, 140, 140);
+    doc.text(
+      `Generato il ${new Date().toLocaleDateString(
+        "it-IT"
+      )} alle ${new Date().toLocaleTimeString("it-IT", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`,
+      marginX,
+      pageHeight - 6
+    );
+    doc.text(`Pagina ${currentPage} di ${pageCount}`, pageWidth - marginX, pageHeight - 6, {
+      align: "right",
+    });
+  };
+
   const exportToPDF = async () => {
     try {
-      const doc = new jsPDF();
       const { columns, data } = prepareExportData();
 
       if (!data || data.length === 0) {
         throw new Error("Nessun dato disponibile per il periodo selezionato");
       }
 
-      doc.setFontSize(16);
-      doc.text(`Report ${REPORT_TYPES[reportType]}`, 14, 15);
+      // Tabelle con molte colonne stanno più comode in orizzontale.
+      const orientation = columns.length > 6 ? "landscape" : "portrait";
+      const doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const marginX = 12;
+      const bottomReserved = 14; // spazio per il footer
 
-      doc.setFontSize(11);
+      // --- Intestazione ---
+      doc.setFillColor(...BRAND_COLOR);
+      doc.rect(0, 0, pageWidth, 22, "F");
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(16);
+      doc.setFont(undefined, "bold");
+      doc.text(`Report ${REPORT_TYPES[reportType]}`, marginX, 14);
+      doc.setFont(undefined, "normal");
+
+      doc.setTextColor(60, 60, 60);
+      doc.setFontSize(10);
+      let cursorY = 30;
+
       if (reportType === "attendance") {
         doc.text(
           `Periodo: ${formatDate(attendanceDateRange.start)} - ${formatDate(
             attendanceDateRange.end
           )}`,
-          14,
-          25
+          marginX,
+          cursorY
         );
+        cursorY += 6;
       } else if (reportType !== "athletes" && reportType !== "clothing") {
         doc.text(
           `Periodo: ${formatDate(dateRange.start)} - ${formatDate(
             dateRange.end
           )}`,
-          14,
-          25
+          marginX,
+          cursorY
         );
+        cursorY += 6;
       }
 
-      const athletesText = athletes
-        .filter((a) => selectedAthletes.includes(a.id))
-        .map((a) => `${a.name} ${a.lastName} (${a.type} - ${a.category})`)
-        .join(", ");
-
-      const maxWidth = 180;
-      const splitAthletes = doc.splitTextToSize(
-        `Atleti: ${athletesText}`,
-        maxWidth
+      doc.setFontSize(9);
+      doc.text(
+        `Atleti selezionati: ${selectedAthletes.length}`,
+        marginX,
+        cursorY
       );
-      const startY =
-        reportType === "athletes" || reportType === "clothing" ? 25 : 35;
-      doc.text(splitAthletes, 14, startY);
+      cursorY += 8;
 
-      const tableStartY = startY + splitAthletes.length * 7;
+      const tableStartY = cursorY;
 
-      doc.autoTable({
-        startY: tableStartY,
-        head: [columns.map((col) => col.header)],
-        body: data.map((row) => columns.map((col) => row[col.dataKey] || "")),
-        styles: {
-          fontSize: 8,
-          cellPadding: 2,
-        },
-        headStyles: {
-          fillColor: [41, 128, 185],
-          textColor: 255,
-          fontSize: 9,
-          fontStyle: "bold",
-        },
-        theme: "grid",
-        margin: { top: tableStartY },
-      });
+      const sizeTiers = [
+        { fontSize: 9, cellPadding: 2.5 },
+        { fontSize: 8, cellPadding: 2 },
+        { fontSize: 7, cellPadding: 1.5 },
+        { fontSize: 6.5, cellPadding: 1.2 },
+        { fontSize: 6, cellPadding: 1 }, // soglia minima leggibile
+      ];
+
+      if (reportType === "attendance") {
+        // --- Registro presenze: Data ed Evento non sono più colonne ripetute
+        // su ogni riga, ma un'intestazione mostrata una sola volta per ogni
+        // gruppo Data+Evento (di norma un solo gruppo, ma se il periodo
+        // selezionato copre più giornate/eventi se ne stampa uno per ciascuno).
+        const registerColumns = columns.filter(
+          (col) => col.dataKey !== "data" && col.dataKey !== "evento"
+        );
+        const presenzaColIndex = registerColumns.findIndex(
+          (col) => col.dataKey === "presenza"
+        );
+
+        const groups = [];
+        const groupIndexByKey = new Map();
+        data.forEach((row) => {
+          const key = `${row.data}||${row.evento}`;
+          if (!groupIndexByKey.has(key)) {
+            groupIndexByKey.set(key, groups.length);
+            groups.push({ data: row.data, evento: row.evento, rows: [] });
+          }
+          groups[groupIndexByKey.get(key)].rows.push(row);
+        });
+
+        // Calcolo dinamico font/padding per provare a stare in una pagina,
+        // tenendo conto anche dello spazio occupato dalle intestazioni dei gruppi.
+        const availableHeight =
+          pageHeight - tableStartY - bottomReserved - groups.length * 7;
+        const rowCount = data.length;
+        let chosenTier = sizeTiers[0];
+        for (const tier of sizeTiers) {
+          const estRowHeight =
+            tier.fontSize * 0.3528 * 1.2 + tier.cellPadding * 2;
+          const estHeaderHeight = estRowHeight * 1.3;
+          const estTotalHeight =
+            estHeaderHeight * groups.length + estRowHeight * rowCount;
+          chosenTier = tier;
+          if (estTotalHeight <= availableHeight) break;
+        }
+
+        let groupCursorY = tableStartY;
+
+        groups.forEach((group) => {
+          if (groupCursorY > pageHeight - 30) {
+            doc.addPage();
+            groupCursorY = 20;
+          }
+
+          doc.setFontSize(11);
+          doc.setFont(undefined, "bold");
+          doc.setTextColor(30, 41, 59);
+          doc.text(
+            `Data: ${group.data}   •   Evento: ${group.evento}`,
+            marginX,
+            groupCursorY
+          );
+          doc.setFont(undefined, "normal");
+          groupCursorY += 5;
+
+          doc.autoTable({
+            startY: groupCursorY,
+            head: [registerColumns.map((col) => col.header)],
+            body: group.rows.map((row) =>
+              registerColumns.map((col) => row[col.dataKey] || "")
+            ),
+            styles: {
+              fontSize: chosenTier.fontSize,
+              cellPadding: chosenTier.cellPadding,
+              lineColor: [225, 229, 235],
+              lineWidth: 0.1,
+              textColor: [55, 65, 81],
+            },
+            headStyles: {
+              fillColor: BRAND_COLOR_DARK,
+              textColor: 255,
+              fontSize: Math.max(chosenTier.fontSize, 7),
+              fontStyle: "bold",
+              halign: "center",
+            },
+            alternateRowStyles: {
+              fillColor: [243, 246, 251],
+            },
+            theme: "striped",
+            margin: { left: marginX, right: marginX, bottom: bottomReserved },
+            didParseCell: (hookData) => {
+              if (
+                hookData.section === "body" &&
+                hookData.column.index === presenzaColIndex
+              ) {
+                const color =
+                  PRESENCE_COLORS[hookData.cell.raw] || PRESENCE_COLOR_DEFAULT;
+                hookData.cell.styles.fillColor = color.fill;
+                hookData.cell.styles.textColor = color.text;
+                hookData.cell.styles.fontStyle = "bold";
+                hookData.cell.styles.halign = "center";
+              }
+            },
+            didDrawPage: () =>
+              drawPdfFooter(doc, pageWidth, pageHeight, marginX),
+          });
+
+          groupCursorY = doc.lastAutoTable.finalY + 10;
+        });
+      } else {
+        // --- Calcolo dinamico font/padding per provare a stare in una pagina ---
+        const availableHeight = pageHeight - tableStartY - bottomReserved;
+        const rowCount = data.length;
+
+        let chosenTier = sizeTiers[0];
+        for (const tier of sizeTiers) {
+          const estRowHeight =
+            tier.fontSize * 0.3528 * 1.2 + tier.cellPadding * 2;
+          const estHeaderHeight = estRowHeight * 1.3;
+          const estTotalHeight = estHeaderHeight + estRowHeight * rowCount;
+          chosenTier = tier;
+          if (estTotalHeight <= availableHeight) break;
+        }
+
+        doc.autoTable({
+          startY: tableStartY,
+          head: [columns.map((col) => col.header)],
+          body: data.map((row) => columns.map((col) => row[col.dataKey] || "")),
+          styles: {
+            fontSize: chosenTier.fontSize,
+            cellPadding: chosenTier.cellPadding,
+            lineColor: [225, 229, 235],
+            lineWidth: 0.1,
+            textColor: [55, 65, 81],
+          },
+          headStyles: {
+            fillColor: BRAND_COLOR_DARK,
+            textColor: 255,
+            fontSize: Math.max(chosenTier.fontSize, 7),
+            fontStyle: "bold",
+            halign: "center",
+          },
+          alternateRowStyles: {
+            fillColor: [243, 246, 251],
+          },
+          theme: "striped",
+          margin: {
+            top: tableStartY,
+            left: marginX,
+            right: marginX,
+            bottom: bottomReserved,
+          },
+          didDrawPage: () => drawPdfFooter(doc, pageWidth, pageHeight, marginX),
+        });
+      }
 
       const fileName = `Report_${reportType}_${
         new Date().toISOString().split("T")[0]
@@ -825,12 +1040,7 @@ export default function Reports() {
               )}`,
             ]
           : [],
-        [
-          `Atleti: ${athletes
-            .filter((a) => selectedAthletes.includes(a.id))
-            .map((a) => `${a.name} ${a.lastName} (${a.type} - ${a.category})`)
-            .join(", ")}`,
-        ],
+        [`Atleti selezionati: ${selectedAthletes.length}`],
         [""],
         columns.map((col) => col.header),
       ];
@@ -1066,78 +1276,118 @@ export default function Reports() {
           </select>
         </div>
 
-        {/* Selezione Atleti con Ricerca */}
-        <div className="mb-8 col-span-2">
-          <div className="flex justify-between items-center mb-2">
-            <label className="block text-sm font-medium text-gray-700">
-              Seleziona Atleti
-            </label>
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                placeholder="Cerca atleta..."
-                value={athleteSearch}
-                onChange={(e) => setAthleteSearch(e.target.value)}
-                className="text-sm border rounded px-3 py-1 focus:ring-indigo-500 focus:border-indigo-500"
-                disabled={isExporting}
-              />
-              <button
-                type="button"
-                onClick={handleSelectAll}
-                className="text-sm text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed px-2"
-                disabled={isExporting || filteredAthletes.length === 0}
-              >
-                {selectedAthletes.length === filteredAthletes.length
-                  ? "Deseleziona tutti"
-                  : "Seleziona tutti"}
-              </button>
-            </div>
-          </div>
+        {/* Selezione Atleti - Menu a tendina */}
+        <div className="mb-8 col-span-2 athlete-dropdown" ref={athleteDropdownRef}>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Seleziona Atleti
+          </label>
 
-          {/* Griglia Atleti */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto border border-gray-300 rounded-md p-2">
-            {loading && athletes.length === 0 ? (
-              <div className="col-span-full flex items-center justify-center p-4">
-                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                <span>Caricamento atleti...</span>
+          {/* Pulsante che apre/chiude il menu a tendina */}
+          <button
+            type="button"
+            onClick={() => setIsAthleteDropdownOpen((prev) => !prev)}
+            disabled={isExporting}
+            className={`athlete-dropdown-toggle ${
+              isAthleteDropdownOpen ? "open" : ""
+            }`}
+          >
+            <span>
+              {selectedAthletes.length > 0
+                ? `${selectedAthletes.length} atleti selezionati`
+                : "Nessun atleta selezionato"}
+            </span>
+            <span className="athlete-dropdown-caret">▾</span>
+          </button>
+
+          {isAthleteDropdownOpen && (
+            <div className="athlete-dropdown-panel">
+              {/* Barra di ricerca */}
+              <div className="athlete-dropdown-search">
+                <input
+                  type="text"
+                  placeholder="Cerca atleta..."
+                  value={athleteSearch}
+                  onChange={(e) => setAthleteSearch(e.target.value)}
+                  disabled={isExporting}
+                  autoFocus
+                />
               </div>
-            ) : filteredAthletes.length === 0 ? (
-              <div className="col-span-full p-4 text-center text-gray-500">
-                Nessun atleta trovato
-              </div>
-            ) : (
-              filteredAthletes.map((athlete) => (
-                <div
-                  key={athlete.id}
-                  className={`
-                 flex items-center p-2 rounded cursor-pointer
-                 ${
-                   selectedAthletes.includes(athlete.id)
-                     ? "bg-blue-50"
-                     : "hover:bg-gray-50"
-                 }
-               `}
-                  onClick={() => handleAthleteSelection(athlete.id)}
-                >
+
+              {/* Flag rapidi: seleziona tutti + mostra archiviati */}
+              <div className="athlete-dropdown-flags">
+                <label className="athlete-dropdown-flag">
                   <input
                     type="checkbox"
-                    checked={selectedAthletes.includes(athlete.id)}
-                    onChange={() => {}}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                    checked={
+                      filteredAthletes.length > 0 &&
+                      selectedAthletes.length === filteredAthletes.length
+                    }
+                    onChange={handleSelectAll}
+                    disabled={isExporting || filteredAthletes.length === 0}
                   />
-                  <label className="ml-2 text-sm">
-                    {athlete.lastName} {athlete.name}
-                    <span className="text-xs text-gray-500 ml-1">
-                      ({athlete.category})
-                    </span>
-                  </label>
-                </div>
-              ))
-            )}
-          </div>
-          <p className="mt-1 text-sm text-gray-500">
-            {selectedAthletes.length} atleti selezionati
-          </p>
+                  <span>Seleziona tutti</span>
+                </label>
+                <label className="athlete-dropdown-flag">
+                  <input
+                    type="checkbox"
+                    checked={showArchivedAthletes}
+                    onChange={(e) =>
+                      setShowArchivedAthletes(e.target.checked)
+                    }
+                    disabled={isExporting}
+                  />
+                  <span>Mostra atleti archiviati</span>
+                </label>
+              </div>
+
+              {/* Lista atleti con checkbox */}
+              <div className="athlete-dropdown-list">
+                {loading && athletes.length === 0 ? (
+                  <div className="athlete-dropdown-empty">
+                    <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                    <span>Caricamento atleti...</span>
+                  </div>
+                ) : filteredAthletes.length === 0 ? (
+                  <div className="athlete-dropdown-empty">
+                    Nessun atleta trovato
+                  </div>
+                ) : (
+                  filteredAthletes.map((athlete) => (
+                    <label
+                      key={athlete.id}
+                      className={`athlete-dropdown-item ${
+                        selectedAthletes.includes(athlete.id) ? "selected" : ""
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedAthletes.includes(athlete.id)}
+                        onChange={() => handleAthleteSelection(athlete.id)}
+                      />
+                      <span className="athlete-dropdown-item-name">
+                        {athlete.lastName} {athlete.name}
+                        <span className="athlete-dropdown-item-category">
+                          ({athlete.category})
+                          {athlete.archived ? " · Archiviato" : ""}
+                        </span>
+                      </span>
+                    </label>
+                  ))
+                )}
+              </div>
+
+              <div className="athlete-dropdown-footer">
+                <span>{selectedAthletes.length} atleti selezionati</span>
+                <button
+                  type="button"
+                  onClick={() => setIsAthleteDropdownOpen(false)}
+                  className="athlete-dropdown-done"
+                >
+                  Fatto
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1178,11 +1428,7 @@ export default function Reports() {
           </div>
           {selectedAthletes.length > 0 && (
             <p className="text-sm text-blue-700 ml-7">
-              Atleti selezionati:{" "}
-              {athletes
-                .filter((a) => selectedAthletes.includes(a.id))
-                .map((a) => `${a.name} ${a.lastName} (${a.category})`)
-                .join(", ")}
+              {selectedAthletes.length} atleti selezionati
             </p>
           )}
         </div>

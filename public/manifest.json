@@ -1,0 +1,15 @@
+{
+  "short_name": "Gestione Nuoto",
+  "name": "Gestione Squadra di Nuoto",
+  "icons": [
+    {
+      "src": "inuoto2.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
