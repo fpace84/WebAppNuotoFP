@@ -1,0 +1,893 @@
+/* staffettaManagement.css */
+
+/* Container principale */
+.staffetta-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  min-height: calc(100vh - 100px);
+  background-color: #f5f5f5;
+}
+
+/* Selettore vista */
+.view-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+  background: white;
+  padding: 12px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.view-btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+  background: #e0e0e0;
+  color: #333;
+  flex: 1;
+  text-align: center;
+  max-width: 200px;
+}
+
+.view-btn.active {
+  background: #4a90e2;
+  color: white;
+}
+
+.view-btn:hover:not(.active) {
+  background: #d0d0d0;
+}
+
+/* Form di configurazione */
+.config-view {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.form-select:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+.help-text {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+/* Pulsanti azione */
+.formation-actions {
+  margin-top: 30px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.action-button {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  min-width: 180px;
+}
+
+.create-button {
+  background: #4caf50;
+  color: white;
+}
+
+.create-button:hover:not(:disabled) {
+  background: #45a049;
+}
+
+.create-button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+}
+
+.reset-button {
+  background: #f44336;
+  color: white;
+}
+
+.reset-button:hover {
+  background: #d32f2f;
+}
+
+/* Vista formazioni */
+.formations-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formation-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.formation-header {
+  background: #f8f9fa;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  font-weight: 500;
+}
+
+.formation-header .formation-actions {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.total-time {
+  font-weight: 500;
+  color: #4a90e2;
+}
+
+.remove-button {
+  padding: 8px 16px;
+  background: #ff4444;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.remove-button:hover {
+  background: #cc0000;
+}
+
+.formation-body {
+  padding: 20px;
+}
+
+.position-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+  transition: all 0.3s ease;
+}
+
+.position-row:hover {
+  background: #f8f9fa;
+}
+
+.athlete-info {
+  flex: 1;
+  margin-right: 16px;
+}
+
+.athlete-name {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.athlete-gender {
+  margin-left: 8px;
+  color: #666;
+  font-size: 0.9em;
+}
+
+.athlete-details {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 0.9em;
+  color: #666;
+}
+
+.style-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-weight: 500;
+  font-size: 0.85em;
+}
+
+.time-date-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.best-time {
+  font-weight: 500;
+  color: #4caf50;
+}
+
+.time-date {
+  color: #666;
+  font-size: 0.9em;
+}
+
+.time-type {
+  color: #888;
+  font-size: 0.9em;
+  margin-left: 4px;
+}
+
+.replace-button {
+  padding: 8px 16px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.replace-button:hover {
+  background: #357abd;
+  transform: translateY(-1px);
+}
+
+/* Sezione frazionisti */
+.fractionists-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #eee;
+}
+
+.fractionists-section h3 {
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.fractionist-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.fractionist-label {
+  min-width: 180px;
+  font-weight: 500;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.style-name {
+  color: #1976d2;
+  font-size: 0.9em;
+  font-weight: normal;
+}
+
+.fractionist-select {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.fractionist-select:focus {
+  border-color: #4a90e2;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2);
+}
+
+/* Anteprima tempi */
+.times-preview-container {
+  margin-top: 24px;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.times-preview-container h4 {
+  margin-bottom: 12px;
+  color: #333;
+}
+
+.times-preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.times-preview-table th,
+.times-preview-table td {
+  padding: 10px;
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.times-preview-table th {
+  background: #f5f5f5;
+  font-weight: 500;
+}
+
+.times-preview-table .total-row {
+  font-weight: 500;
+  background: #f8f9fa;
+}
+
+.times-preview-table .total-row .total-time {
+  color: #4a90e2;
+  font-size: 1.1em;
+}
+
+.times-preview-table .time-cell {
+  font-weight: 500;
+}
+
+.preview-message,
+.preview-error {
+  padding: 16px;
+  border-radius: 6px;
+  margin-top: 16px;
+  text-align: center;
+}
+
+.preview-message {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+
+.preview-error {
+  background: #ffebee;
+  color: #c62828;
+}
+
+/* Ranking */
+.ranking-view {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.ranking-results {
+  margin-top: 24px;
+}
+
+.ranking-title {
+  font-size: 1.2em;
+  font-weight: 500;
+  margin-bottom: 16px;
+  color: #333;
+}
+
+/* Tabella Desktop */
+.ranking-table-desktop {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  display: table;
+}
+
+.ranking-table-desktop th {
+  background: #f5f5f5;
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 500;
+  border-bottom: 2px solid #ddd;
+  position: sticky;
+  top: 0;
+}
+
+.ranking-table-desktop td {
+  padding: 12px 8px;
+  border-bottom: 1px solid #eee;
+}
+
+.ranking-table-desktop tr:hover {
+  background: #f8f9fa;
+}
+
+.position-number {
+  font-weight: 500;
+  color: #4a90e2;
+}
+
+.athlete-name-cell {
+  font-weight: 500;
+}
+
+.gender-cell,
+.type-cell {
+  text-align: center;
+}
+
+.time-cell {
+  font-weight: 500;
+  color: #4caf50;
+}
+
+/* Card Mobile */
+.ranking-cards-mobile {
+  display: none;
+}
+
+.ranking-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.ranking-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+}
+
+.ranking-position {
+  background: #4a90e2;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.95em;
+  flex-shrink: 0;
+}
+
+.ranking-athlete-name {
+  flex: 1;
+  font-weight: 600;
+  color: #333;
+  font-size: 1em;
+}
+
+.ranking-gender-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.85em;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.ranking-card-time {
+  font-size: 1.5em;
+  font-weight: 600;
+  color: #4caf50;
+  text-align: center;
+  padding: 12px 0;
+  margin-bottom: 12px;
+  background: #f8f9fa;
+  border-radius: 6px;
+}
+
+.ranking-card-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.ranking-detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.detail-label {
+  font-size: 0.75em;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.detail-value {
+  font-size: 0.9em;
+  color: #333;
+  font-weight: 500;
+}
+
+/* Modale sostituzione */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.2s ease;
+}
+
+.modal-content {
+  background: white;
+  padding: 24px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  animation: slideIn 0.3s ease;
+}
+
+.modal-title {
+  margin-bottom: 20px;
+  font-size: 1.2em;
+  font-weight: 500;
+  color: #333;
+}
+
+.athletes-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.athlete-option {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-align: left;
+  width: 100%;
+  color: #333;
+  font-weight: 500;
+}
+
+.athlete-option:hover {
+  background: #f5f5f5;
+  border-color: #4a90e2;
+}
+
+.athlete-option span {
+  color: #333;
+}
+
+.athlete-category {
+  color: #666;
+  margin-left: 8px;
+  font-size: 0.9em;
+  font-weight: normal;
+}
+
+.athlete-gender-badge {
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85em;
+  font-weight: 500;
+  min-width: 30px;
+  text-align: center;
+}
+
+.close-modal {
+  width: 100%;
+  padding: 12px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #666;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.close-modal:hover {
+  background: #e0e0e0;
+}
+
+/* Loading e Error states */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.loading-spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4a90e2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-text {
+  margin-top: 16px;
+  color: #333;
+  font-weight: 500;
+  text-align: center;
+}
+
+.loading-subtext {
+  color: #666;
+  font-size: 0.9em;
+  margin-top: 8px;
+}
+
+.error-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 20px;
+  border-radius: 8px;
+  text-align: center;
+  max-width: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  animation: slideIn 0.3s ease;
+}
+
+.error-title {
+  font-weight: 500;
+  font-size: 1.1em;
+  margin-bottom: 8px;
+}
+
+.error-text {
+  font-size: 0.95em;
+}
+
+.close-error {
+  background: none;
+  border: none;
+  color: #c62828;
+  cursor: pointer;
+  padding: 4px;
+  font-size: 18px;
+  margin-left: 12px;
+}
+
+.retry-button {
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: #4a90e2;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.retry-button:hover {
+  background: #357abd;
+}
+
+/* No data states */
+.no-formations {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.no-candidates {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.no-rankings {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  background: #f5f5f5;
+  border-radius: 6px;
+}
+
+/* Animazioni */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive - Tablet e Mobile */
+@media (max-width: 768px) {
+  .staffetta-container {
+    padding: 10px;
+  }
+
+  .view-selector {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .view-btn {
+    flex: 1 1 calc(50% - 4px);
+    min-width: 0;
+    max-width: none;
+    font-size: 13px;
+    padding: 10px 8px;
+    white-space: normal;
+    line-height: 1.3;
+  }
+
+  .formation-header {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .athlete-details {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .formation-actions {
+    flex-direction: column;
+  }
+
+  .action-button {
+    width: 100%;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+    max-height: 90vh;
+  }
+
+  .fractionist-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .fractionist-label {
+    min-width: auto;
+    width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+
+  .fractionist-select {
+    width: 100%;
+  }
+
+  .ranking-filters {
+    grid-template-columns: 1fr;
+  }
+
+  /* Nascondi tabella desktop su mobile */
+  .ranking-table-desktop {
+    display: none;
+  }
+
+  /* Mostra card su mobile */
+  .ranking-cards-mobile {
+    display: block;
+  }
+
+  .ranking-title {
+    font-size: 1em;
+    line-height: 1.4;
+  }
+}
+
+/* Responsive - iPhone piccoli */
+@media (max-width: 375px) {
+  .view-btn {
+    font-size: 12px;
+    padding: 8px 6px;
+  }
+
+  .config-view {
+    padding: 16px;
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+}

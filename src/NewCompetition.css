@@ -1,0 +1,198 @@
+/* newCompetition.css */
+
+.new-competition-container {
+  background-color: #f8f9fa;
+  min-height: 100vh;
+  padding: 16px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+.competition-form-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 600px;
+}
+
+.form-header {
+  padding: 16px;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.form-title {
+  text-align: center;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: #333;
+  margin: 0;
+}
+
+.competition-form {
+  padding: 16px;
+}
+
+.form-field {
+  margin-bottom: 16px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+  font-size: 0.9rem;
+}
+
+.form-input,
+.form-select {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.form-input:focus,
+.form-select:focus {
+  border-color: #4285f4;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+}
+
+.dates-container {
+  margin-bottom: 8px;
+}
+
+.date-input-group {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.remove-date-btn {
+  background: none;
+  border: none;
+  color: #d32f2f;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0 8px;
+}
+
+.add-date-btn {
+  background: none;
+  border: none;
+  color: #4285f4;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+}
+
+/* Modifica lo stile delle checkbox per renderle visibili */
+.checkbox-input {
+  margin-right: 8px;
+  width: 18px;
+  height: 18px;
+  appearance: auto; /* Importante: usa l'apparenza standard del browser */
+  -webkit-appearance: auto;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+}
+
+.checkbox-input:checked {
+  background-color: #4285f4;
+  border-color: #4285f4;
+}
+
+.checkbox-label {
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.checkbox-label {
+  font-size: 0.9rem;
+}
+
+.error-text {
+  color: #d32f2f;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.error-message {
+  background-color: #ffebee;
+  color: #d32f2f;
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.cancel-button {
+  padding: 10px 16px;
+  background-color: #f1f3f4;
+  color: #5f6368;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.submit-button {
+  padding: 10px 16px;
+  background-color: #4285f4;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background-color: #3b78e7;
+}
+
+.submit-button:disabled {
+  background-color: #a5c7fe;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .competition-form-card {
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .cancel-button,
+  .submit-button {
+    width: 100%;
+  }
+}

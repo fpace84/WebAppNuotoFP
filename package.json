@@ -1,0 +1,34 @@
+{
+  "name": "swim-team-management",
+  "version": "1.0.0",
+  "description": "",
+  "keywords": [],
+  "main": "src/index.js",
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.27.0",
+    "react-scripts": "^5.0.1",
+    "recharts": "^2.12.0",
+    "lucide-react": "0.453.0",
+    "react-pdf": "9.1.1",
+    "exceljs": "4.4.0",
+    "jspdf-autotable": "3.8.4",
+    "jspdf": "2.5.2",
+    "xlsx": "0.18.5",
+    "firebase": "11.0.1",
+    "firebase-functions": "^4.7.0",
+    "firebase-admin": "^12.0.0",
+    "cors": "^2.8.5",
+    "tailwindcss": "3.4.14",
+    "postcss": "8.4.47"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject",
+    "deploy-functions": "firebase deploy --only functions"
+  },
+  "browserslist": [">0.2%", "not dead", "not ie <= 11", "not op_mini all"]
+}

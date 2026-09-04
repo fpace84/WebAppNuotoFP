@@ -1,0 +1,278 @@
+/* Wrapper con classe specifica per limitare l'ambito del CSS */
+.clothing-management-wrapper {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+  padding: 1rem;
+}
+
+/* Card principale con effetto 3D */
+.clothing-management-wrapper .relative {
+  position: relative;
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.clothing-management-wrapper .absolute {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, #06b6d4, #3b82f6);
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  transform: skewY(-6deg);
+  z-index: 0;
+}
+
+@media (min-width: 640px) {
+  .clothing-management-wrapper .absolute {
+    transform: rotate(-6deg);
+  }
+}
+
+/* Contenuto card */
+.clothing-management-wrapper .px-4 {
+  position: relative;
+  background-color: white;
+  padding: 2.5rem 1.5rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+@media (min-width: 640px) {
+  .clothing-management-wrapper .px-4 {
+    padding: 2.5rem 5rem;
+  }
+}
+
+/* Titoli dentro clothing management */
+.clothing-management-wrapper h1 {
+  font-size: 1.875rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.clothing-management-wrapper h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.clothing-management-wrapper h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #4b5563;
+  margin-bottom: 0.5rem;
+}
+
+/* Spacing */
+.clothing-management-wrapper .space-y-6 > * + * {
+  margin-top: 1.5rem;
+}
+
+/* Item dell'abbigliamento */
+.clothing-management-wrapper .bg-gray-50 {
+  background-color: #f9fafb;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.clothing-management-wrapper .bg-gray-50:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Controlli per gli items */
+.clothing-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.control-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+}
+
+/* Select e Input */
+.clothing-management-wrapper .size-select {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  min-width: 180px;
+  background-color: white;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.clothing-management-wrapper .custom-size-input {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  font-size: 0.875rem;
+  flex: 1;
+}
+
+.clothing-management-wrapper .quantity-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clothing-management-wrapper .quantity-label {
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.clothing-management-wrapper .quantity-input {
+  width: 80px;
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+/* Checkbox container */
+.clothing-management-wrapper .checkbox-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* Checkbox migliorato */
+.clothing-management-wrapper .delivery-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 4px;
+  background-color: white;
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.clothing-management-wrapper .delivery-checkbox:checked {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.clothing-management-wrapper .delivery-checkbox:checked::after {
+  content: "✓";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-weight: bold;
+  font-size: 12px;
+}
+
+.clothing-management-wrapper .delivery-checkbox:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.clothing-management-wrapper .delivery-label {
+  font-size: 0.875rem;
+  color: #4b5563;
+  cursor: pointer;
+}
+
+/* Bottoni specifici per clothing management */
+.clothing-management-wrapper .button-container {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.clothing-management-wrapper .cancel-button,
+.clothing-management-wrapper .save-button {
+  padding: 0.75rem 1rem;
+  border-radius: 0.375rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  text-align: center;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.clothing-management-wrapper .cancel-button {
+  background-color: #6b7280;
+  color: white;
+}
+
+.clothing-management-wrapper .cancel-button:hover {
+  background-color: #4b5563;
+}
+
+.clothing-management-wrapper .save-button {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.clothing-management-wrapper .save-button:hover {
+  background-color: #2563eb;
+}
+
+/* Lista atleti */
+.clothing-management-wrapper .space-y-2 {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.clothing-management-wrapper .space-y-2 a {
+  display: block;
+  padding: 0.75rem;
+  background-color: #f9fafb;
+  border-radius: 0.375rem;
+  color: #2563eb;
+  text-decoration: none;
+  transition: background-color 0.2s;
+  font-weight: 500;
+}
+
+.clothing-management-wrapper .space-y-2 a:hover {
+  background-color: #e5edff;
+}
+
+/* Focus styles */
+.clothing-management-wrapper .size-select:focus,
+.clothing-management-wrapper .custom-size-input:focus,
+.clothing-management-wrapper .quantity-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* Media queries per schermi piccoli */
+@media (max-width: 640px) {
+  .clothing-management-wrapper .button-container {
+    flex-direction: column-reverse;
+  }
+}

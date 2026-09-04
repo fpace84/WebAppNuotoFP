@@ -1,0 +1,488 @@
+/* Stili generali della tabella */
+.table-header {
+  padding: 0.75rem;
+  text-align: left;
+  border-bottom: 2px solid #e5e7eb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.athlete-row {
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.athlete-row:hover {
+  background-color: #f9fafb;
+}
+
+.table-cell {
+  padding: 0.75rem;
+  white-space: nowrap;
+}
+
+.actions-cell {
+  padding: 0.5rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Stili dei bottoni nella tabella */
+.btn-details {
+  padding: 0.375rem 0.75rem;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.btn-details:hover {
+  background-color: #2563eb;
+}
+
+.btn-archive {
+  padding: 0.375rem 0.75rem;
+  background-color: #f59e0b;
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.btn-archive:hover {
+  background-color: #d97706;
+}
+
+.btn-restore {
+  padding: 0.375rem 0.75rem;
+  background-color: #10b981;
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.btn-restore:hover {
+  background-color: #059669;
+}
+
+.btn-delete {
+  padding: 0.375rem 0.75rem;
+  background-color: #ef4444;
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.btn-delete:hover {
+  background-color: #dc2626;
+}
+
+.btn-edit {
+  padding: 0.375rem 0.75rem;
+  background-color: #8b5cf6;
+  color: white;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+}
+
+.btn-edit:hover {
+  background-color: #7c3aed;
+}
+
+/* Stili per i bottoni dell'header */
+.button-container {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.action-button {
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border: none;
+  font-weight: 500;
+}
+
+.archive-button {
+  background-color: #f59e0b;
+  color: white;
+}
+
+.archive-button:hover {
+  background-color: #d97706;
+}
+
+.archive-button.active {
+  background-color: #10b981;
+}
+
+.archive-button.active:hover {
+  background-color: #059669;
+}
+
+.new-button {
+  background-color: #10b981;
+  color: white;
+}
+
+.new-button:hover {
+  background-color: #059669;
+}
+
+.dashboard-button {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.dashboard-button:hover {
+  background-color: #2563eb;
+}
+
+/* Responsive per tablet */
+@media (max-width: 1024px) {
+  .table-cell {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .action-buttons {
+    gap: 0.375rem;
+  }
+
+  .btn-details,
+  .btn-archive,
+  .btn-restore,
+  .btn-delete,
+  .btn-edit {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .button-container {
+    gap: 0.375rem;
+  }
+
+  .action-button {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Responsive per mobile */
+@media (max-width: 768px) {
+  table {
+    border: 0;
+    width: 100%;
+  }
+
+  table thead {
+    display: none;
+  }
+
+  table tbody {
+    display: block;
+  }
+
+  table tr {
+    margin-bottom: 12px;
+    display: block;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  table td {
+    display: block;
+    text-align: right;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    position: relative;
+    min-height: 2.5rem;
+  }
+
+  table td:last-child {
+    border-bottom: 0;
+  }
+
+  table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0.75rem;
+    top: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-align: left;
+  }
+
+  .actions-cell {
+    justify-content: flex-end;
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+
+  .actions-cell::before {
+    display: none;
+  }
+
+  .action-buttons {
+    justify-content: flex-end;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .btn-details,
+  .btn-archive,
+  .btn-restore,
+  .btn-delete,
+  .btn-edit {
+    flex: 0 1 auto;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .button-container {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .action-button {
+    flex: 0 1 auto;
+    white-space: nowrap;
+  }
+}
+
+/* Responsive per iPhone piccoli e schermi molto stretti */
+@media (max-width: 375px) {
+  table tr {
+    margin-bottom: 10px;
+  }
+
+  table td {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.875rem;
+  }
+
+  table td::before {
+    font-size: 0.6875rem;
+    left: 0.625rem;
+    top: 0.5rem;
+  }
+
+  .actions-cell {
+    padding: 0.625rem;
+  }
+
+  .action-buttons {
+    gap: 0.375rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-details,
+  .btn-archive,
+  .btn-restore,
+  .btn-delete,
+  .btn-edit {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+    min-width: fit-content;
+  }
+
+  .button-container {
+    gap: 0.375rem;
+  }
+
+  .action-button {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Ottimizzazioni per evitare overflow */
+@media (max-width: 768px) {
+  .table-cell {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    padding-left: 45%;
+  }
+
+  .table-cell::before {
+    width: 40%;
+  }
+}
+
+/* Responsive per tablet */
+@media (max-width: 1024px) {
+  .table-cell {
+    padding: 0.5rem;
+    font-size: 0.875rem;
+  }
+
+  .action-buttons {
+    gap: 0.375rem;
+  }
+
+  .btn-details,
+  .btn-archive,
+  .btn-restore,
+  .btn-delete,
+  .btn-edit {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Responsive per mobile */
+@media (max-width: 768px) {
+  table {
+    border: 0;
+    width: 100%;
+  }
+
+  table thead {
+    display: none;
+  }
+
+  table tbody {
+    display: block;
+  }
+
+  table tr {
+    margin-bottom: 12px;
+    display: block;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  table td {
+    display: block;
+    text-align: right;
+    padding: 0.625rem 0.75rem;
+    border-bottom: 1px solid #f3f4f6;
+    position: relative;
+    min-height: 2.5rem;
+  }
+
+  table td:last-child {
+    border-bottom: 0;
+  }
+
+  table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0.75rem;
+    top: 0.625rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-align: left;
+  }
+
+  .actions-cell {
+    justify-content: flex-end;
+    padding: 0.75rem;
+    background-color: #f9fafb;
+    border-radius: 0 0 0.5rem 0.5rem;
+  }
+
+  .actions-cell::before {
+    display: none;
+  }
+
+  .action-buttons {
+    justify-content: flex-end;
+    width: 100%;
+    gap: 0.5rem;
+  }
+
+  .btn-details,
+  .btn-archive,
+  .btn-restore,
+  .btn-delete,
+  .btn-edit {
+    flex: 0 1 auto;
+    white-space: nowrap;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* Responsive per iPhone piccoli e schermi molto stretti */
+@media (max-width: 375px) {
+  table tr {
+    margin-bottom: 10px;
+  }
+
+  table td {
+    padding: 0.5rem 0.625rem;
+    font-size: 0.875rem;
+  }
+
+  table td::before {
+    font-size: 0.6875rem;
+    left: 0.625rem;
+    top: 0.5rem;
+  }
+
+  .actions-cell {
+    padding: 0.625rem;
+  }
+
+  .action-buttons {
+    gap: 0.375rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-details,
+  .btn-archive,
+  .btn-restore,
+  .btn-delete,
+  .btn-edit {
+    padding: 0.375rem 0.625rem;
+    font-size: 0.8125rem;
+    min-width: fit-content;
+  }
+}
+
+/* Ottimizzazioni per evitare overflow */
+@media (max-width: 768px) {
+  .table-cell {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    padding-left: 45%;
+  }
+
+  .table-cell::before {
+    width: 40%;
+  }
+}

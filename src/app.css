@@ -1,0 +1,284 @@
+/* app.css */
+
+/* Base layout */
+.min-h-screen {
+  min-height: 100vh;
+  background-color: #f3f4f6;
+}
+
+/* Header */
+.header {
+  background-color: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  width: 88%; /* Ridotta larghezza */
+  position: fixed;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  margin-top: 0.5rem; /* Aggiunto margine superiore */
+  border-radius: 0.5rem; /* Aggiunto bordo arrotondato */
+  height: fit-content; /* Altezza adattiva */
+}
+
+.header-grid {
+  display: grid;
+  grid-template-columns: 50px 1fr 50px; /* Ridotte le dimensioni delle colonne */
+  align-items: center;
+  padding: 0.5rem;
+  max-width: 80%; /* Ridotta la larghezza massima */
+  margin: 0 auto;
+  gap: 0.5rem;
+}
+
+/* Logo section */
+.logo-container {
+  padding: 0; /* Rimosso padding */
+}
+
+.logo {
+  height: 70px;
+  width: auto;
+}
+
+/* Title section */
+.title-container {
+  text-align: center;
+}
+
+.app-title {
+  color: #000000;
+  letter-spacing: 0.02em; /* Ridotto letter spacing */
+  font-size: 1.25rem; /* Ridotta dimensione font */
+  font-weight: 900;
+}
+
+/* User menu */
+.user-button {
+  width: 35px; /* Ridotta dimensione */
+  height: 35px;
+  padding: 0;
+  background-color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.user-button {
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  background-color: white;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-button svg {
+  color: #3b82f6;
+  width: 35px;
+  height: 35px;
+}
+
+.user-dropdown {
+  position: absolute;
+  right: 0;
+  top: 100%; /* Cambiato da right: 100% a top: 100% */
+  margin-top: 0.5rem; /* Aggiunto margine superiore */
+  display: flex;
+  flex-direction: column; /* Cambiato da row a column */
+  gap: 0.5rem;
+  background: white;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+}
+
+.button-lime,
+.button-orange {
+  width: 100%; /* Larghezza piena */
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  color: white;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.button-lime {
+  background-color: #84cc16;
+}
+
+.button-lime:hover {
+  background-color: #65a30d;
+}
+
+.button-orange {
+  background-color: #f97316;
+}
+
+.button-orange:hover {
+  background-color: #ea580c;
+}
+
+/* Main container */
+.main-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+  margin-top: 6rem;
+}
+
+/* Action buttons */
+.action-button {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  text-align: center;
+  color: white;
+  margin-bottom: 0.75rem;
+}
+
+.button-purple {
+  background-color: #7c3aed;
+}
+
+.button-purple:hover {
+  background-color: #6d28d9;
+}
+
+.button-green {
+  background-color: #059669;
+}
+
+.button-green:hover {
+  background-color: #047857;
+}
+
+.button-blue {
+  background-color: #3b82f6;
+}
+
+.button-blue:hover {
+  background-color: #2563eb;
+}
+
+.button-pink {
+  background-color: #db2777;
+}
+
+.button-pink:hover {
+  background-color: #be185d;
+}
+
+/* Error page */
+.text-center {
+  text-align: center;
+}
+
+.mt-10 {
+  margin-top: 2.5rem;
+}
+
+/* Responsive design */
+@media (max-width: 360px) {
+  .header-grid {
+    width: 100%;
+    grid-template-columns: 35px 1fr 35px;
+  }
+
+  .logo-container {
+    padding-left: 0.5rem;
+  }
+
+  .logo {
+    height: 40px;
+  }
+
+  .app-title {
+    font-size: 1.5rem;
+  }
+
+  .user-menu {
+    position: relative;
+  }
+
+  .user-button {
+    width: 40px;
+    height: 40px;
+  }
+
+  .user-button svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .user-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    transform: none;
+    margin-right: 0;
+    flex-direction: column;
+    background: white;
+    padding: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-radius: 0.375rem;
+  }
+
+  .button-lime,
+  .button-orange {
+    width: 100%;
+    text-align: center;
+  }
+
+  .main-container {
+    padding: 0.5rem;
+    margin-top: 4rem;
+  }
+}
+
+/* Unauthorized page */
+.bg-gray-100 {
+  background-color: #f3f4f6;
+}
+
+.flex-col {
+  flex-direction: column;
+}
+
+.justify-center {
+  justify-content: center;
+}
+
+.py-12 {
+  padding-top: 3rem;
+  padding-bottom: 3rem;
+}
+
+.sm\:px-6 {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.lg\:px-8 {
+  padding-left: 2rem;
+  padding-right: 2rem;
+}
+
+.shadow {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.rounded-lg {
+  border-radius: 0.5rem;
+}

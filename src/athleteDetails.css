@@ -1,0 +1,255 @@
+/* athleteDetails.css */
+
+.container {
+  width: 95%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem;
+  margin-top: 4rem;
+  margin-bottom: 1rem;
+}
+
+/* Sezioni */
+section {
+  margin-bottom: 1.5rem;
+}
+
+/* Titoli */
+h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 0.75rem;
+}
+
+/* Tabelle */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+th {
+  background-color: #f9fafb;
+  padding: 0.5rem;
+  text-align: left;
+  font-weight: 500;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+td {
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+}
+
+/* Colori presenze */
+.bg-green-100 {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.bg-red-100 {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.bg-yellow-100 {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.bg-white {
+  background-color: white;
+}
+
+/* Calendario */
+.calendar-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.button-toggle {
+  padding: 0.5rem 1rem;
+  border: 1px solid hsl(249, 175, 2);
+  border-radius: 0.375rem;
+  background: rgb(249, 175, 2);
+  font-size: 0.875rem;
+}
+
+.button-toggle.active {
+  background-color: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+/* Calendario griglia */
+.calendar-grid {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.calendar-grid th,
+.calendar-grid td {
+  border: 1px solid #e5e7eb;
+  padding: 0.25rem;
+  text-align: center;
+  height: 2.5rem;
+}
+/* Colori presenze nel calendario */
+.calendar-cell {
+  border: 1px solid #e5e7eb;
+  padding: 0.25rem;
+  height: 2.5rem;
+  vertical-align: top;
+}
+
+.calendar-cell-present {
+  background-color: #dcfce7; /* verde chiaro */
+}
+
+.calendar-cell-late {
+  background-color: #fef9c3; /* giallo chiaro */
+}
+
+.calendar-cell-absent {
+  background-color: #fee2e2; /* rosso chiaro */
+}
+
+.presence-indicator {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-top: 0.25rem;
+}
+/* Badges e stati */
+.badge {
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.status-consegnato {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.status-non-consegnato {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+/* Bottoni azione */
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  color: white;
+  border: none;
+}
+
+.btn-blue {
+  background-color: #3b82f6;
+}
+
+.btn-gray {
+  background-color: #6b7280;
+}
+
+.btn-green {
+  background-color: #10b981;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .container {
+    padding: 0.25rem;
+  }
+
+  h1 {
+    font-size: 1.25rem;
+  }
+
+  h2 {
+    font-size: 1rem;
+  }
+
+  table {
+    font-size: 0.75rem;
+  }
+
+  th,
+  td {
+    padding: 0.25rem;
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .calendar-navigation {
+    flex-direction: column;
+  }
+
+  .calendar-navigation button {
+    width: 100%;
+  }
+
+  .button-toggle {
+    flex: 1;
+    text-align: center;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+/* Utilities */
+.text-center {
+  text-align: center;
+}
+
+.text-blue-600 {
+  color: #2563eb;
+}
+
+.font-medium {
+  font-weight: 500;
+}
+
+.italic {
+  font-style: italic;
+}
+
+.capitalize {
+  text-transform: capitalize;
+}
