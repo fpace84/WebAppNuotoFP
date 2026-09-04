@@ -760,6 +760,37 @@ export default function Reports() {
   const BRAND_COLOR = [37, 99, 235]; // #2563eb, colore dominante dell'app
   const BRAND_COLOR_DARK = [30, 64, 175]; // #1e40af
 
+  const PRESENCE_COLORS = {
+    Presente: { fill: [34, 197, 94], text: [255, 255, 255] }, // verde
+    Assente: { fill: [239, 68, 68], text: [255, 255, 255] }, // rosso
+    "Assente Giustificato": { fill: [249, 115, 22], text: [255, 255, 255] }, // arancione
+    Ritardo: { fill: [250, 204, 21], text: [66, 44, 6] }, // giallo
+    "Uscita Anticipata": { fill: [96, 165, 250], text: [255, 255, 255] }, // azzurro
+  };
+  const PRESENCE_COLOR_DEFAULT = { fill: [209, 213, 219], text: [55, 65, 81] }; // grigio, per valori non previsti
+
+  const drawPdfFooter = (doc, pageWidth, pageHeight, marginX) => {
+    const pageCount = doc.internal.getNumberOfPages();
+    const currentPage = doc.internal.getCurrentPageInfo
+      ? doc.internal.getCurrentPageInfo().pageNumber
+      : pageCount;
+    doc.setFontSize(8);
+    doc.setTextColor(140, 140, 140);
+    doc.text(
+      `Generato il ${new Date().toLocaleDateString(
+        "it-IT"
+      )} alle ${new Date().toLocaleTimeString("it-IT", {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}`,
+      marginX,
+      pageHeight - 6
+    );
+    doc.text(`Pagina ${currentPage} di ${pageCount}`, pageWidth - marginX, pageHeight - 6, {
+      align: "right",
+    });
+  };
+
   const exportToPDF = async () => {
     try {
       const { columns, data } = prepareExportData();
@@ -774,6 +805,7 @@ export default function Reports() {
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const marginX = 12;
+      const bottomReserved = 14; // spazio per il footer
 
       // --- Intestazione ---
       doc.setFillColor(...BRAND_COLOR);
@@ -818,11 +850,6 @@ export default function Reports() {
 
       const tableStartY = cursorY;
 
-      // --- Calcolo dinamico font/padding per provare a stare in una pagina ---
-      const bottomReserved = 14; // spazio per il footer
-      const availableHeight = pageHeight - tableStartY - bottomReserved;
-      const rowCount = data.length;
-
       const sizeTiers = [
         { fontSize: 9, cellPadding: 2.5 },
         { fontSize: 8, cellPadding: 2 },
@@ -831,65 +858,154 @@ export default function Reports() {
         { fontSize: 6, cellPadding: 1 }, // soglia minima leggibile
       ];
 
-      let chosenTier = sizeTiers[0];
-      for (const tier of sizeTiers) {
-        // Stima altezza riga: dimensione carattere (pt -> mm) + interlinea + padding
-        const estRowHeight = tier.fontSize * 0.3528 * 1.2 + tier.cellPadding * 2;
-        const estHeaderHeight = estRowHeight * 1.3;
-        const estTotalHeight = estHeaderHeight + estRowHeight * rowCount;
-        chosenTier = tier;
-        if (estTotalHeight <= availableHeight) break;
-      }
+      if (reportType === "attendance") {
+        // --- Registro presenze: Data ed Evento non sono più colonne ripetute
+        // su ogni riga, ma un'intestazione mostrata una sola volta per ogni
+        // gruppo Data+Evento (di norma un solo gruppo, ma se il periodo
+        // selezionato copre più giornate/eventi se ne stampa uno per ciascuno).
+        const registerColumns = columns.filter(
+          (col) => col.dataKey !== "data" && col.dataKey !== "evento"
+        );
+        const presenzaColIndex = registerColumns.findIndex(
+          (col) => col.dataKey === "presenza"
+        );
 
-      doc.autoTable({
-        startY: tableStartY,
-        head: [columns.map((col) => col.header)],
-        body: data.map((row) => columns.map((col) => row[col.dataKey] || "")),
-        styles: {
-          fontSize: chosenTier.fontSize,
-          cellPadding: chosenTier.cellPadding,
-          lineColor: [225, 229, 235],
-          lineWidth: 0.1,
-          textColor: [55, 65, 81],
-        },
-        headStyles: {
-          fillColor: BRAND_COLOR_DARK,
-          textColor: 255,
-          fontSize: Math.max(chosenTier.fontSize, 7),
-          fontStyle: "bold",
-          halign: "center",
-        },
-        alternateRowStyles: {
-          fillColor: [243, 246, 251],
-        },
-        theme: "striped",
-        margin: { top: tableStartY, left: marginX, right: marginX, bottom: bottomReserved },
-        didDrawPage: () => {
-          // Footer ripetuto su ogni pagina: numero pagina + data generazione
-          const pageCount = doc.internal.getNumberOfPages();
-          const currentPage = doc.internal.getCurrentPageInfo
-            ? doc.internal.getCurrentPageInfo().pageNumber
-            : pageCount;
-          doc.setFontSize(8);
-          doc.setTextColor(140, 140, 140);
+        const groups = [];
+        const groupIndexByKey = new Map();
+        data.forEach((row) => {
+          const key = `${row.data}||${row.evento}`;
+          if (!groupIndexByKey.has(key)) {
+            groupIndexByKey.set(key, groups.length);
+            groups.push({ data: row.data, evento: row.evento, rows: [] });
+          }
+          groups[groupIndexByKey.get(key)].rows.push(row);
+        });
+
+        // Calcolo dinamico font/padding per provare a stare in una pagina,
+        // tenendo conto anche dello spazio occupato dalle intestazioni dei gruppi.
+        const availableHeight =
+          pageHeight - tableStartY - bottomReserved - groups.length * 7;
+        const rowCount = data.length;
+        let chosenTier = sizeTiers[0];
+        for (const tier of sizeTiers) {
+          const estRowHeight =
+            tier.fontSize * 0.3528 * 1.2 + tier.cellPadding * 2;
+          const estHeaderHeight = estRowHeight * 1.3;
+          const estTotalHeight =
+            estHeaderHeight * groups.length + estRowHeight * rowCount;
+          chosenTier = tier;
+          if (estTotalHeight <= availableHeight) break;
+        }
+
+        let groupCursorY = tableStartY;
+
+        groups.forEach((group) => {
+          if (groupCursorY > pageHeight - 30) {
+            doc.addPage();
+            groupCursorY = 20;
+          }
+
+          doc.setFontSize(11);
+          doc.setFont(undefined, "bold");
+          doc.setTextColor(30, 41, 59);
           doc.text(
-            `Generato il ${new Date().toLocaleDateString(
-              "it-IT"
-            )} alle ${new Date().toLocaleTimeString("it-IT", {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}`,
+            `Data: ${group.data}   •   Evento: ${group.evento}`,
             marginX,
-            pageHeight - 6
+            groupCursorY
           );
-          doc.text(
-            `Pagina ${currentPage} di ${pageCount}`,
-            pageWidth - marginX,
-            pageHeight - 6,
-            { align: "right" }
-          );
-        },
-      });
+          doc.setFont(undefined, "normal");
+          groupCursorY += 5;
+
+          doc.autoTable({
+            startY: groupCursorY,
+            head: [registerColumns.map((col) => col.header)],
+            body: group.rows.map((row) =>
+              registerColumns.map((col) => row[col.dataKey] || "")
+            ),
+            styles: {
+              fontSize: chosenTier.fontSize,
+              cellPadding: chosenTier.cellPadding,
+              lineColor: [225, 229, 235],
+              lineWidth: 0.1,
+              textColor: [55, 65, 81],
+            },
+            headStyles: {
+              fillColor: BRAND_COLOR_DARK,
+              textColor: 255,
+              fontSize: Math.max(chosenTier.fontSize, 7),
+              fontStyle: "bold",
+              halign: "center",
+            },
+            alternateRowStyles: {
+              fillColor: [243, 246, 251],
+            },
+            theme: "striped",
+            margin: { left: marginX, right: marginX, bottom: bottomReserved },
+            didParseCell: (hookData) => {
+              if (
+                hookData.section === "body" &&
+                hookData.column.index === presenzaColIndex
+              ) {
+                const color =
+                  PRESENCE_COLORS[hookData.cell.raw] || PRESENCE_COLOR_DEFAULT;
+                hookData.cell.styles.fillColor = color.fill;
+                hookData.cell.styles.textColor = color.text;
+                hookData.cell.styles.fontStyle = "bold";
+                hookData.cell.styles.halign = "center";
+              }
+            },
+            didDrawPage: () =>
+              drawPdfFooter(doc, pageWidth, pageHeight, marginX),
+          });
+
+          groupCursorY = doc.lastAutoTable.finalY + 10;
+        });
+      } else {
+        // --- Calcolo dinamico font/padding per provare a stare in una pagina ---
+        const availableHeight = pageHeight - tableStartY - bottomReserved;
+        const rowCount = data.length;
+
+        let chosenTier = sizeTiers[0];
+        for (const tier of sizeTiers) {
+          const estRowHeight =
+            tier.fontSize * 0.3528 * 1.2 + tier.cellPadding * 2;
+          const estHeaderHeight = estRowHeight * 1.3;
+          const estTotalHeight = estHeaderHeight + estRowHeight * rowCount;
+          chosenTier = tier;
+          if (estTotalHeight <= availableHeight) break;
+        }
+
+        doc.autoTable({
+          startY: tableStartY,
+          head: [columns.map((col) => col.header)],
+          body: data.map((row) => columns.map((col) => row[col.dataKey] || "")),
+          styles: {
+            fontSize: chosenTier.fontSize,
+            cellPadding: chosenTier.cellPadding,
+            lineColor: [225, 229, 235],
+            lineWidth: 0.1,
+            textColor: [55, 65, 81],
+          },
+          headStyles: {
+            fillColor: BRAND_COLOR_DARK,
+            textColor: 255,
+            fontSize: Math.max(chosenTier.fontSize, 7),
+            fontStyle: "bold",
+            halign: "center",
+          },
+          alternateRowStyles: {
+            fillColor: [243, 246, 251],
+          },
+          theme: "striped",
+          margin: {
+            top: tableStartY,
+            left: marginX,
+            right: marginX,
+            bottom: bottomReserved,
+          },
+          didDrawPage: () => drawPdfFooter(doc, pageWidth, pageHeight, marginX),
+        });
+      }
 
       const fileName = `Report_${reportType}_${
         new Date().toISOString().split("T")[0]
@@ -924,12 +1040,7 @@ export default function Reports() {
               )}`,
             ]
           : [],
-        [
-          `Atleti: ${athletes
-            .filter((a) => selectedAthletes.includes(a.id))
-            .map((a) => `${a.name} ${a.lastName} (${a.type} - ${a.category})`)
-            .join(", ")}`,
-        ],
+        [`Atleti selezionati: ${selectedAthletes.length}`],
         [""],
         columns.map((col) => col.header),
       ];
