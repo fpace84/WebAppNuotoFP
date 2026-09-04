@@ -459,7 +459,7 @@ export default function AttendanceManagement() {
     return <div className="text-center py-4 text-red-600">{error}</div>;
 
   return (
-    <div className="container">
+    <div className="container pb-56 sm:pb-48">
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">Gestione Presenze</h2>
@@ -729,69 +729,64 @@ export default function AttendanceManagement() {
         </div>
       </div>
 
-      {/* Pulsanti di azione rapida */}
+      {/* Pannello azioni rapide, fisso in basso mentre si scorre la lista atleti */}
       {filteredAthletes.length > 0 && (
-        <div className="card mt-4 mb-20">
-          <div className="card-body">
-            <div className="p-2 sm:p-3 bg-gray-50 rounded-lg">
-              <div className="mb-2 sm:mb-3">
-                <p className="font-semibold text-gray-700 text-sm sm:text-base">
-                  {selectedAthletes.size > 0
-                    ? `${selectedAthletes.size} atleti selezionati`
-                    : "Seleziona gli atleti e applica uno stato:"}
-                </p>
-              </div>
-              <div className="grid grid-cols-2 sm:flex gap-2 flex-wrap">
-                <button
-                  onClick={() => applyStatusToSelected("Presente")}
-                  className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
-                  disabled={selectedAthletes.size === 0}
-                >
-                  ✓ Presente
-                </button>
-                <button
-                  onClick={() => applyStatusToSelected("Assente")}
-                  className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
-                  disabled={selectedAthletes.size === 0}
-                >
-                  ✗ Assente
-                </button>
-                <button
-                  onClick={() => applyStatusToSelected("Assente Giustificato")}
-                  className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
-                  disabled={selectedAthletes.size === 0}
-                >
-                  ⓘ Ass. Giust.
-                </button>
-                <button
-                  onClick={() => applyStatusToSelected("Ritardo")}
-                  className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
-                  disabled={selectedAthletes.size === 0}
-                >
-                  ⏰ Ritardo
-                </button>
-                <button
-                  onClick={() => applyStatusToSelected("Uscita Anticipata")}
-                  className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base col-span-2 sm:col-span-1"
-                  disabled={selectedAthletes.size === 0}
-                >
-                  ⏪ Uscita Anticipata
-                </button>
-              </div>
+        <div className="fixed bottom-0 left-0 right-0 sm:bottom-4 sm:left-4 sm:right-4 bg-white shadow-lg border-t sm:border sm:rounded-lg z-50">
+          <div className="p-2 sm:p-3 bg-gray-50 sm:rounded-lg">
+            <div className="mb-2 sm:mb-3">
+              <p className="font-semibold text-gray-700 text-sm sm:text-base">
+                {selectedAthletes.size > 0
+                  ? `${selectedAthletes.size} atleti selezionati`
+                  : "Seleziona gli atleti e applica uno stato:"}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:flex gap-2 flex-wrap">
+              <button
+                onClick={() => applyStatusToSelected("Presente")}
+                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+                disabled={selectedAthletes.size === 0}
+              >
+                ✓ Presente
+              </button>
+              <button
+                onClick={() => applyStatusToSelected("Assente")}
+                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+                disabled={selectedAthletes.size === 0}
+              >
+                ✗ Assente
+              </button>
+              <button
+                onClick={() => applyStatusToSelected("Assente Giustificato")}
+                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+                disabled={selectedAthletes.size === 0}
+              >
+                ⓘ Ass. Giust.
+              </button>
+              <button
+                onClick={() => applyStatusToSelected("Ritardo")}
+                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+                disabled={selectedAthletes.size === 0}
+              >
+                ⏰ Ritardo
+              </button>
+              <button
+                onClick={() => applyStatusToSelected("Uscita Anticipata")}
+                className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base col-span-2 sm:col-span-1"
+                disabled={selectedAthletes.size === 0}
+              >
+                ⏪ Uscita Anticipata
+              </button>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Bottone Salva Tutte in fondo */}
-      {filteredAthletes.length > 0 && (
-        <div className="fixed bottom-2 sm:bottom-4 right-2 sm:right-4 left-2 sm:left-4 bg-white p-3 sm:p-4 shadow-lg rounded-lg border flex justify-center sm:justify-end z-50">
-          <button
-            onClick={handleSaveAll}
-            className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 sm:px-8 rounded text-sm sm:text-base w-full sm:w-auto"
-          >
-            Salva tutte le presenze
-          </button>
+          <div className="p-2 sm:p-3 pt-0 sm:pt-0 flex justify-center sm:justify-end">
+            <button
+              onClick={handleSaveAll}
+              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 sm:px-8 rounded text-sm sm:text-base w-full sm:w-auto"
+            >
+              Salva tutte le presenze
+            </button>
+          </div>
         </div>
       )}
     </div>
