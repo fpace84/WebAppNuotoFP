@@ -808,19 +808,13 @@ export default function Reports() {
         cursorY += 6;
       }
 
-      const athletesText = athletes
-        .filter((a) => selectedAthletes.includes(a.id))
-        .map((a) => `${a.name} ${a.lastName} (${a.type} - ${a.category})`)
-        .join(", ");
-
-      const maxWidth = pageWidth - marginX * 2;
-      const splitAthletes = doc.splitTextToSize(
-        `Atleti: ${athletesText}`,
-        maxWidth
-      );
       doc.setFontSize(9);
-      doc.text(splitAthletes, marginX, cursorY);
-      cursorY += splitAthletes.length * 4.5 + 4;
+      doc.text(
+        `Atleti selezionati: ${selectedAthletes.length}`,
+        marginX,
+        cursorY
+      );
+      cursorY += 8;
 
       const tableStartY = cursorY;
 
@@ -1323,11 +1317,7 @@ export default function Reports() {
           </div>
           {selectedAthletes.length > 0 && (
             <p className="text-sm text-blue-700 ml-7">
-              Atleti selezionati:{" "}
-              {athletes
-                .filter((a) => selectedAthletes.includes(a.id))
-                .map((a) => `${a.name} ${a.lastName} (${a.category})`)
-                .join(", ")}
+              {selectedAthletes.length} atleti selezionati
             </p>
           )}
         </div>
