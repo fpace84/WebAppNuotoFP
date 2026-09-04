@@ -176,6 +176,219 @@ input[type="checkbox"] {
   font-size: 0.875rem;
 }
 
+/* Menu a tendina selezione atleti */
+.athlete-dropdown {
+  position: relative;
+}
+
+.athlete-dropdown-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  color: #374151;
+  cursor: pointer;
+}
+
+.athlete-dropdown-toggle.open {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.athlete-dropdown-caret {
+  color: #6b7280;
+  transition: transform 0.15s ease;
+}
+
+.athlete-dropdown-toggle.open .athlete-dropdown-caret {
+  transform: rotate(180deg);
+}
+
+.athlete-dropdown-panel {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.athlete-dropdown-search {
+  padding: 0.5rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.athlete-dropdown-search input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.athlete-dropdown-flags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.athlete-dropdown-flag {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8125rem;
+  color: #374151;
+  cursor: pointer;
+  padding: 0.2rem 0;
+}
+
+.athlete-dropdown-flag input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.athlete-dropdown-list {
+  max-height: 45vh;
+  overflow-y: auto;
+}
+
+.athlete-dropdown-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.athlete-dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.6rem 0.75rem;
+  font-size: 0.875rem;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.athlete-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.athlete-dropdown-item:hover {
+  background-color: #f9fafb;
+}
+
+.athlete-dropdown-item.selected {
+  background-color: #eff6ff;
+}
+
+.athlete-dropdown-item input[type="checkbox"] {
+  width: 1rem;
+  height: 1rem;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.athlete-dropdown-item-name {
+  flex: 1;
+}
+
+.athlete-dropdown-item-category {
+  color: #6b7280;
+  font-size: 0.75rem;
+  margin-left: 0.25rem;
+}
+
+.athlete-dropdown-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.8125rem;
+  color: #374151;
+}
+
+.athlete-dropdown-done {
+  width: auto;
+  padding: 0.35rem 0.9rem;
+  background-color: #2563eb;
+  color: white;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+}
+
+/* Responsive: smartphone */
+@media (max-width: 640px) {
+  .p-6 {
+    padding: 0.75rem;
+    margin-top: 3.5rem;
+  }
+
+  .max-w-6xl {
+    width: 100%;
+  }
+
+  h1.text-3xl {
+    font-size: 1.15rem;
+    text-align: left;
+    margin-bottom: 0;
+  }
+
+  .flex.justify-between.items-center.mb-6 {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  .flex.justify-between.items-center.mb-6 .flex.space-x-4 {
+    flex-direction: row;
+    gap: 0.5rem;
+  }
+
+  .flex.justify-between.items-center.mb-6 .flex.space-x-4 button {
+    font-size: 0.8125rem;
+    padding: 0.6rem;
+  }
+
+  .grid.grid-cols-1.md\:grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .athlete-dropdown-panel {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    border-radius: 0.75rem 0.75rem 0 0;
+    max-height: 75vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .athlete-dropdown-list {
+    max-height: none;
+    flex: 1;
+  }
+}
+
 /* Scrollbar personalizzata */
 ::-webkit-scrollbar {
   width: 6px;
