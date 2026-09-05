@@ -459,7 +459,7 @@ export default function AttendanceManagement() {
     return <div className="text-center py-4 text-red-600">{error}</div>;
 
   return (
-    <div className="container pb-56 sm:pb-48">
+    <div className="container">
       <div className="card">
         <div className="card-header">
           <h2 className="card-title">Gestione Presenze</h2>
@@ -731,47 +731,45 @@ export default function AttendanceManagement() {
 
       {/* Pannello azioni rapide, fisso in basso mentre si scorre la lista atleti */}
       {filteredAthletes.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 sm:bottom-4 sm:left-4 sm:right-4 bg-white shadow-lg border-t sm:border sm:rounded-lg z-50">
-          <div className="p-2 sm:p-3 bg-gray-50 sm:rounded-lg">
-            <div className="mb-2 sm:mb-3">
-              <p className="font-semibold text-gray-700 text-sm sm:text-base">
-                {selectedAthletes.size > 0
-                  ? `${selectedAthletes.size} atleti selezionati`
-                  : "Seleziona gli atleti e applica uno stato:"}
-              </p>
-            </div>
-            <div className="grid grid-cols-2 sm:flex gap-2 flex-wrap">
+        <div className="quick-actions-panel">
+          <div className="quick-actions-inner">
+            <p className="quick-actions-label">
+              {selectedAthletes.size > 0
+                ? `${selectedAthletes.size} atleti selezionati`
+                : "Seleziona gli atleti e applica uno stato:"}
+            </p>
+            <div className="quick-actions-buttons">
               <button
                 onClick={() => applyStatusToSelected("Presente")}
-                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+                className="quick-action-btn presente"
                 disabled={selectedAthletes.size === 0}
               >
                 ✓ Presente
               </button>
               <button
                 onClick={() => applyStatusToSelected("Assente")}
-                className="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+                className="quick-action-btn assente"
                 disabled={selectedAthletes.size === 0}
               >
                 ✗ Assente
               </button>
               <button
                 onClick={() => applyStatusToSelected("Assente Giustificato")}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+                className="quick-action-btn giustificato"
                 disabled={selectedAthletes.size === 0}
               >
                 ⓘ Ass. Giust.
               </button>
               <button
                 onClick={() => applyStatusToSelected("Ritardo")}
-                className="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base"
+                className="quick-action-btn ritardo"
                 disabled={selectedAthletes.size === 0}
               >
                 ⏰ Ritardo
               </button>
               <button
                 onClick={() => applyStatusToSelected("Uscita Anticipata")}
-                className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-2 sm:py-2 px-3 sm:px-4 rounded text-sm sm:text-base col-span-2 sm:col-span-1"
+                className="quick-action-btn uscita quick-action-uscita"
                 disabled={selectedAthletes.size === 0}
               >
                 ⏪ Uscita Anticipata
@@ -779,11 +777,8 @@ export default function AttendanceManagement() {
             </div>
           </div>
 
-          <div className="p-2 sm:p-3 pt-0 sm:pt-0 flex justify-center sm:justify-end">
-            <button
-              onClick={handleSaveAll}
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 sm:px-8 rounded text-sm sm:text-base w-full sm:w-auto"
-            >
+          <div className="quick-actions-save-wrap">
+            <button onClick={handleSaveAll} className="quick-actions-save-btn">
               Salva tutte le presenze
             </button>
           </div>

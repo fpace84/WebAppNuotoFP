@@ -1,13 +1,158 @@
 /* Container principale */
 .container {
   padding: 0.5rem;
-  margin-bottom: 4rem; /* Spazio per il bottone fisso */
+  margin-bottom: 4rem;
+  padding-bottom: 15rem; /* Spazio per il pannello azioni rapide + salva, fisso in basso */
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding-bottom: 11rem;
+  }
+}
+
+/* Pannello azioni rapide + salva, fisso in basso */
+.quick-actions-panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: white;
+  box-shadow: 0 -2px 12px rgba(0, 0, 0, 0.15);
+  border-top: 1px solid #e5e7eb;
+  z-index: 50;
+}
+
+.quick-actions-inner {
+  padding: 0.6rem;
+  background: #f9fafb;
+}
+
+.quick-actions-label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.quick-actions-buttons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.quick-actions-buttons .quick-action-uscita {
+  grid-column: span 2;
+}
+
+.quick-action-btn {
+  padding: 0.65rem 0.75rem;
+  border: none;
+  border-radius: 0.375rem;
+  color: white;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.quick-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.quick-action-btn.presente {
+  background: #22c55e;
+}
+.quick-action-btn.presente:hover:not(:disabled) {
+  background: #16a34a;
+}
+.quick-action-btn.assente {
+  background: #ef4444;
+}
+.quick-action-btn.assente:hover:not(:disabled) {
+  background: #dc2626;
+}
+.quick-action-btn.giustificato {
+  background: #f59e0b;
+}
+.quick-action-btn.giustificato:hover:not(:disabled) {
+  background: #d97706;
+}
+.quick-action-btn.ritardo {
+  background: #f97316;
+}
+.quick-action-btn.ritardo:hover:not(:disabled) {
+  background: #ea580c;
+}
+.quick-action-btn.uscita {
+  background: #a855f7;
+}
+.quick-action-btn.uscita:hover:not(:disabled) {
+  background: #9333ea;
+}
+
+.quick-actions-save-wrap {
+  padding: 0.6rem;
+  padding-top: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.quick-actions-save-btn {
+  width: 100%;
+  padding: 0.9rem;
+  background: #3b82f6;
+  color: white;
+  font-weight: 700;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.quick-actions-save-btn:hover {
+  background: #2563eb;
+}
+
+@media (min-width: 640px) {
+  .quick-actions-panel {
+    left: 1rem;
+    right: 1rem;
+    bottom: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  }
+  .quick-actions-inner {
+    border-radius: 0.5rem 0.5rem 0 0;
+    padding: 0.75rem;
+  }
+  .quick-actions-buttons {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .quick-actions-buttons .quick-action-uscita {
+    grid-column: auto;
+  }
+  .quick-action-btn {
+    padding: 0.5rem 1rem;
+  }
+  .quick-actions-save-wrap {
+    justify-content: flex-end;
+    padding: 0.75rem;
+    padding-top: 0;
+  }
+  .quick-actions-save-btn {
+    width: auto;
+    padding: 0.75rem 2rem;
+  }
 }
 
 /* Card */
 .card {
   background: white;
   border-radius: 0.5rem;
+
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem;
   overflow: hidden;
