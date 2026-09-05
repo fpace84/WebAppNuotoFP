@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { calculateCategory } from "./categories";
@@ -20,6 +20,21 @@ export default function TrainingTimes() {
   const [athletes, setAthletes] = useState([]);
   const [selectedType, setSelectedType] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target)
+      ) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const [individualEntries, setIndividualEntries] = useState([]);
 
@@ -635,7 +650,7 @@ export default function TrainingTimes() {
           </select>
         </div>
 
-        <div style={{ marginBottom: "16px" }}>
+        <div style={{ marginBottom: "16px" }} ref={categoryDropdownRef}>
           <label
             style={{
               display: "block",
@@ -646,41 +661,131 @@ export default function TrainingTimes() {
           >
             Categorie
           </label>
-          <select
-            multiple
-            value={selectedCategories}
-            onChange={(e) => {
-              const values = Array.from(
-                e.target.selectedOptions,
-                (option) => option.value
-              );
-              setSelectedCategories(values);
-            }}
-            style={{
-              width: "100%",
-              padding: "14px",
-              fontSize: "16px",
-              border: "1px solid #ddd",
-              borderRadius: "8px",
-              minHeight: "100px",
-            }}
-          >
-            {availableCategories.map((category) => (
-              <option key={category} value={category}>
-                {category}
-              </option>
-            ))}
-          </select>
-          <small
-            style={{
-              display: "block",
-              marginTop: "4px",
-              color: "#666",
-              fontSize: "12px",
-            }}
-          >
-            Tieni premuto Ctrl (o Cmd su Mac) per selezionare più categorie
-          </small>
+          <div style={{ position: "relative" }}>
+            <button
+              type="button"
+              onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
+              style={{
+                width: "100%",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                padding: "14px",
+                fontSize: "16px",
+                border: isCategoryDropdownOpen
+                  ? "1px solid #007AFF"
+                  : "1px solid #ddd",
+                borderRadius: "8px",
+                backgroundColor: "white",
+                color: "#333",
+                cursor: "pointer",
+              }}
+            >
+              <span>
+                {selectedCategories.length > 0
+                  ? `${selectedCategories.length} categorie selezionate`
+                  : "Nessuna categoria selezionata"}
+              </span>
+              <span style={{ color: "#666" }}>▾</span>
+            </button>
+
+            {isCategoryDropdownOpen && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: "calc(100% + 4px)",
+                  left: 0,
+                  right: 0,
+                  zIndex: 40,
+                  backgroundColor: "white",
+                  border: "1px solid #ddd",
+                  borderRadius: "8px",
+                  boxShadow: "0 10px 25px rgba(0, 0, 0, 0.12)",
+                  overflow: "hidden",
+                }}
+              >
+                <label
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    padding: "12px 14px",
+                    fontSize: "15px",
+                    fontWeight: "600",
+                    backgroundColor: "#f9fafb",
+                    borderBottom: "1px solid #eee",
+                    cursor: "pointer",
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={
+                      availableCategories.length > 0 &&
+                      selectedCategories.length === availableCategories.length
+                    }
+                    onChange={() => {
+                      setSelectedCategories(
+                        selectedCategories.length === availableCategories.length
+                          ? []
+                          : [...availableCategories]
+                      );
+                    }}
+                    disabled={availableCategories.length === 0}
+                    style={{ width: "18px", height: "18px" }}
+                  />
+                  <span>Seleziona tutte</span>
+                </label>
+                <div style={{ maxHeight: "40vh", overflowY: "auto" }}>
+                  {availableCategories.length === 0 ? (
+                    <div
+                      style={{
+                        padding: "16px",
+                        textAlign: "center",
+                        color: "#666",
+                        fontSize: "14px",
+                      }}
+                    >
+                      Nessuna categoria disponibile
+                    </div>
+                  ) : (
+                    availableCategories.map((category) => (
+                      <label
+                        key={category}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "10px",
+                          padding: "12px 14px",
+                          fontSize: "15px",
+                          cursor: "pointer",
+                          borderBottom: "1px solid #f3f4f6",
+                          backgroundColor: selectedCategories.includes(
+                            category
+                          )
+                            ? "#eff6ff"
+                            : "white",
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedCategories.includes(category)}
+                          onChange={() => {
+                            setSelectedCategories((prev) =>
+                              prev.includes(category)
+                                ? prev.filter((c) => c !== category)
+                                : [...prev, category]
+                            );
+                          }}
+                          style={{ width: "18px", height: "18px" }}
+                        />
+                        <span>{category}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {mode === "group" && !heatsGenerated && (

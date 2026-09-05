@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { calculateCategory } from "./categories";
@@ -10,6 +10,8 @@ export default function CompetitionResults() {
   const [selectedAthletes, setSelectedAthletes] = useState([]);
   const [selectedType, setSelectedType] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
   const [races, setRaces] = useState([]);
   const [existingResults, setExistingResults] = useState({});
   const [loading, setLoading] = useState(true);
@@ -107,6 +109,19 @@ export default function CompetitionResults() {
     }
     setFilteredAthletes(filtered);
   }, [athletes, selectedType, selectedCategories]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target)
+      ) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Controlla se esiste già un risultato per questa combinazione
   const hasExistingResult = (athleteId, competitionName, style, distance) => {
@@ -441,26 +456,78 @@ export default function CompetitionResults() {
               </select>
             </div>
 
-            <div>
+            <div className="category-dropdown" ref={categoryDropdownRef}>
               <label className="form-label">Categoria</label>
-              <select
-                className="form-select"
-                multiple
-                value={selectedCategories}
-                onChange={(e) => {
-                  const values = Array.from(
-                    e.target.selectedOptions,
-                    (option) => option.value
-                  );
-                  setSelectedCategories(values);
-                }}
+              <button
+                type="button"
+                onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
+                className={`category-dropdown-toggle ${
+                  isCategoryDropdownOpen ? "open" : ""
+                }`}
               >
-                {availableCategories.map((category) => (
-                  <option key={category} value={category}>
-                    {category}
-                  </option>
-                ))}
-              </select>
+                <span>
+                  {selectedCategories.length > 0
+                    ? `${selectedCategories.length} categorie selezionate`
+                    : "Nessuna categoria selezionata"}
+                </span>
+                <span className="category-dropdown-caret">▾</span>
+              </button>
+
+              {isCategoryDropdownOpen && (
+                <div className="category-dropdown-panel">
+                  <label className="category-dropdown-item select-all">
+                    <input
+                      type="checkbox"
+                      checked={
+                        availableCategories.length > 0 &&
+                        selectedCategories.length ===
+                          availableCategories.length
+                      }
+                      onChange={() => {
+                        setSelectedCategories(
+                          selectedCategories.length ===
+                            availableCategories.length
+                            ? []
+                            : [...availableCategories]
+                        );
+                      }}
+                      disabled={availableCategories.length === 0}
+                    />
+                    <span>Seleziona tutte</span>
+                  </label>
+                  <div className="category-dropdown-list">
+                    {availableCategories.length === 0 ? (
+                      <div className="category-dropdown-empty">
+                        Nessuna categoria disponibile
+                      </div>
+                    ) : (
+                      availableCategories.map((category) => (
+                        <label
+                          key={category}
+                          className={`category-dropdown-item ${
+                            selectedCategories.includes(category)
+                              ? "selected"
+                              : ""
+                          }`}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedCategories.includes(category)}
+                            onChange={() => {
+                              setSelectedCategories((prev) =>
+                                prev.includes(category)
+                                  ? prev.filter((c) => c !== category)
+                                  : [...prev, category]
+                              );
+                            }}
+                          />
+                          <span>{category}</span>
+                        </label>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
