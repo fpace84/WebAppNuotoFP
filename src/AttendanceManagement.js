@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { db } from "./firebase";
 import {
   collection,
@@ -40,6 +40,22 @@ export default function AttendanceManagement() {
   const [editMode, setEditMode] = useState({});
   const [presenceFilter, setPresenceFilter] = useState("all");
   const [selectedAthletes, setSelectedAthletes] = useState(new Set());
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
+
+  // Chiude il menu a tendina categorie quando si clicca fuori
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target)
+      ) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const presenceOptions = [
     "Presente",
@@ -458,6 +474,14 @@ export default function AttendanceManagement() {
   if (error)
     return <div className="text-center py-4 text-red-600">{error}</div>;
 
+  // Il pannello azioni rapide compare solo dopo aver compilato tutti i menu
+  // a tendina: tipo evento, data (o gara), tipologia e almeno una categoria.
+  const allFiltersCompleted =
+    eventType &&
+    (eventType === "allenamento" ? !!date : !!selectedRace) &&
+    !!selectedType &&
+    selectedCategories.length > 0;
+
   return (
     <div className="container">
       <div className="card">
@@ -532,21 +556,10 @@ export default function AttendanceManagement() {
                 <option value="Propaganda">Propaganda</option>
               </select>
             </div>
-            <div>
+            <div className="category-dropdown" ref={categoryDropdownRef}>
               <label className="form-label">Categorie</label>
-              <select
-                className="form-select"
-                multiple
-                value={selectedCategories}
-                onChange={(e) => {
-                  const values = Array.from(
-                    e.target.selectedOptions,
-                    (option) => option.value
-                  );
-                  setSelectedCategories(values);
-                }}
-              >
-                {[
+              {(() => {
+                const availableCategories = [
                   ...new Set(
                     athletes
                       .filter((a) => !selectedType || a.type === selectedType)
@@ -554,14 +567,88 @@ export default function AttendanceManagement() {
                         calculateCategory(a.birthYear, a.type, a.gender)
                       )
                   ),
-                ]
-                  .sort()
-                  .map((category) => (
-                    <option key={category} value={category}>
-                      {category}
-                    </option>
-                  ))}
-              </select>
+                ].sort();
+
+                const allSelected =
+                  availableCategories.length > 0 &&
+                  selectedCategories.length === availableCategories.length;
+
+                const toggleCategory = (category) => {
+                  setSelectedCategories((prev) =>
+                    prev.includes(category)
+                      ? prev.filter((c) => c !== category)
+                      : [...prev, category]
+                  );
+                };
+
+                const toggleSelectAllCategories = () => {
+                  setSelectedCategories(
+                    allSelected ? [] : [...availableCategories]
+                  );
+                };
+
+                return (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setIsCategoryDropdownOpen((prev) => !prev)
+                      }
+                      className={`category-dropdown-toggle ${
+                        isCategoryDropdownOpen ? "open" : ""
+                      }`}
+                    >
+                      <span>
+                        {selectedCategories.length > 0
+                          ? `${selectedCategories.length} categorie selezionate`
+                          : "Nessuna categoria selezionata"}
+                      </span>
+                      <span className="category-dropdown-caret">▾</span>
+                    </button>
+
+                    {isCategoryDropdownOpen && (
+                      <div className="category-dropdown-panel">
+                        <label className="category-dropdown-item select-all">
+                          <input
+                            type="checkbox"
+                            checked={allSelected}
+                            onChange={toggleSelectAllCategories}
+                            disabled={availableCategories.length === 0}
+                          />
+                          <span>Seleziona tutte</span>
+                        </label>
+                        <div className="category-dropdown-list">
+                          {availableCategories.length === 0 ? (
+                            <div className="category-dropdown-empty">
+                              Nessuna categoria disponibile
+                            </div>
+                          ) : (
+                            availableCategories.map((category) => (
+                              <label
+                                key={category}
+                                className={`category-dropdown-item ${
+                                  selectedCategories.includes(category)
+                                    ? "selected"
+                                    : ""
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={selectedCategories.includes(
+                                    category
+                                  )}
+                                  onChange={() => toggleCategory(category)}
+                                />
+                                <span>{category}</span>
+                              </label>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
 
             <div>
@@ -730,7 +817,7 @@ export default function AttendanceManagement() {
       </div>
 
       {/* Pannello azioni rapide, fisso in basso mentre si scorre la lista atleti */}
-      {filteredAthletes.length > 0 && (
+      {allFiltersCompleted && filteredAthletes.length > 0 && (
         <div className="quick-actions-panel">
           <div className="quick-actions-inner">
             <p className="quick-actions-label">
