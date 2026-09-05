@@ -4,8 +4,6 @@ import { db } from "./firebase";
 import {
   collection,
   getDocs,
-  query,
-  where,
   doc,
   getDoc,
   deleteDoc,

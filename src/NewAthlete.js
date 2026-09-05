@@ -63,10 +63,6 @@ export default function NewAthlete() {
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 120 }, (_, i) => currentYear - i);
 
-  const inputStyle =
-    "mt-1 block w-full px-4 py-2 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-gray-900";
-  const labelStyle = "block text-sm font-medium text-gray-700 mb-1";
-
   return (
     <div className="min-h-screen">
       <div className="form-container">

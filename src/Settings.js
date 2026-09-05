@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { auth, db, functions } from "./firebase";
-import {
-  createUserWithEmailAndPassword,
-  deleteUser,
-  signInWithEmailAndPassword,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
 import {
   collection,
   getDocs,

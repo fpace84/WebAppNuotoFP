@@ -14,12 +14,7 @@ import {
   doc,
   getDoc,
 } from "firebase/firestore";
-import {
-  calculateCategory,
-  SWIMMING_STYLES,
-  DISTANCES,
-  ATHLETE_TYPES,
-} from "./categories";
+import { calculateCategory, ATHLETE_TYPES } from "./categories";
 import { formatTime, timeToMilliseconds } from "./FormatTime";
 import "./reports.css";
 
@@ -86,7 +81,6 @@ export default function Reports() {
     start: "",
     end: "",
   });
-  const [categories, setCategories] = useState([]);
 
   // Mappa atleti per lookup O(1) invece di athletes.find() ripetuto su ogni riga
   // in ogni funzione di export (era O(N_record * N_atleti)).
@@ -276,27 +270,6 @@ export default function Reports() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reportType, selectedAthletes, dateRange, attendanceDateRange]);
-
-  // Effect per caricare le categorie quando cambia il tipo
-  useEffect(() => {
-    if (athletes.length > 0) {
-      const availableCategories = [
-        ...new Set(
-          athletes
-            .filter(
-              (a) =>
-                !selectedType ||
-                selectedType === "all" ||
-                a.type === selectedType
-            )
-            .map((a) => a.category)
-        ),
-      ].sort();
-      setCategories(availableCategories);
-    } else {
-      setCategories([]);
-    }
-  }, [selectedType, athletes]);
 
   // Funzione per caricare i dati di allenamento
   //

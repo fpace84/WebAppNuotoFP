@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { auth, db } from "./firebase";
 import { createUserWithEmailAndPassword, deleteUser } from "firebase/auth";
-import { doc, setDoc, deleteDoc } from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 
 export default function CreateUser() {
   const navigate = useNavigate();
@@ -109,24 +109,6 @@ export default function CreateUser() {
       setError(errorMessage);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // Funzione per eliminare un utente
-  const deleteUserAccount = async (userId) => {
-    try {
-      // Elimina il documento da Firestore
-      await deleteDoc(doc(db, "users", userId));
-      // Elimina l'utente da Authentication
-      const user = auth.currentUser;
-      if (user) {
-        await deleteUser(user);
-      }
-      alert("Account eliminato con successo");
-      navigate("/login");
-    } catch (error) {
-      console.error("Errore nell'eliminazione:", error);
-      alert("Errore durante l'eliminazione dell'account");
     }
   };
 

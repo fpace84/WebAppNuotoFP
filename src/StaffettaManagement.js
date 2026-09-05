@@ -254,8 +254,6 @@ export default function StaffettaManagement() {
     };
   }, []);
 
-  const hasData = athletes.length > 0 && Object.keys(athleteTimes).length > 0;
-
   const getEligibleAthletes = useCallback(
     (formationAthletes = [], excludeAthletes = []) => {
       return athletes.filter((athlete) => {

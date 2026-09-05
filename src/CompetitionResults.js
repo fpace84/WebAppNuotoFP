@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { db } from "./firebase";
-import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
+import { collection, addDoc, getDocs } from "firebase/firestore";
 import { calculateCategory } from "./categories";
 import "./competitionResults.css";
 

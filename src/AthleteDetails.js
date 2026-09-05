@@ -38,7 +38,6 @@ export default function AthleteDetails() {
 
   // Stati utente
   const [userRole, setUserRole] = useState("");
-  const [userChildInfo, setUserChildInfo] = useState(null);
 
   // Stati filtri
   const [attendanceFilter, setAttendanceFilter] = useState({
@@ -139,10 +138,6 @@ export default function AthleteDetails() {
           const userDoc = await getDoc(doc(db, "users", userId));
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            setUserChildInfo({
-              name: userData.childName,
-              lastName: userData.childLastName,
-            });
             if (
               athleteData.name !== userData.childName ||
               athleteData.lastName !== userData.childLastName

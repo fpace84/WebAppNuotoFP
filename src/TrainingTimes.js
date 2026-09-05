@@ -23,7 +23,6 @@ export default function TrainingTimes() {
 
   const [individualEntries, setIndividualEntries] = useState([]);
 
-  const [groupAthletes, setGroupAthletes] = useState([]);
   const [groupStyle, setGroupStyle] = useState("");
   const [groupDistance, setGroupDistance] = useState("");
   const [athletesPerHeat, setAthletesPerHeat] = useState(6);
@@ -115,7 +114,6 @@ export default function TrainingTimes() {
     } else {
       return presentAthletes.includes(athlete.id);
     }
-    return true;
   });
 
   const availableCategories = [
@@ -491,7 +489,6 @@ export default function TrainingTimes() {
 
       if (savedCount > 0) {
         alert(`Salvati ${savedCount} tempi con successo!`);
-        setGroupAthletes([]);
         setHeats([]);
         setHeatsGenerated(false);
         setHeatTimes({});
@@ -541,7 +538,6 @@ export default function TrainingTimes() {
           onClick={() => {
             setMode("individual");
             setIndividualEntries([]);
-            setGroupAthletes([]);
             setHeats([]);
             setHeatsGenerated(false);
           }}
@@ -563,7 +559,6 @@ export default function TrainingTimes() {
           onClick={() => {
             setMode("group");
             setIndividualEntries([]);
-            setGroupAthletes([]);
             setHeats([]);
             setHeatsGenerated(false);
           }}
