@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "./firebase";
 import { collection, addDoc } from "firebase/firestore";
+import { SWIMMING_STYLES, DISTANCES } from "./categories";
 import "./NewCompetition.css";
 
 export default function NewCompetition() {
@@ -12,6 +13,8 @@ export default function NewCompetition() {
     dates: [""],
     location: "",
     types: [],
+    styles: [],
+    distances: [],
     level: "",
     registrationDeadline: "",
     status: "upcoming",
@@ -77,22 +80,17 @@ export default function NewCompetition() {
     }));
   };
 
-  // Gestisce la selezione delle tipologie
-  const handleTypeToggle = (type) => {
-    const currentTypes = [...competitionData.types];
-    if (currentTypes.includes(type)) {
-      // Se il tipo è già presente, rimuovilo
-      setCompetitionData((prev) => ({
+  // Gestisce la selezione di valori in un elenco (tipologie, stili, distanze)
+  const handleListToggle = (field, value) => {
+    setCompetitionData((prev) => {
+      const currentList = prev[field];
+      return {
         ...prev,
-        types: prev.types.filter((t) => t !== type),
-      }));
-    } else {
-      // Altrimenti aggiungilo
-      setCompetitionData((prev) => ({
-        ...prev,
-        types: [...prev.types, type],
-      }));
-    }
+        [field]: currentList.includes(value)
+          ? currentList.filter((v) => v !== value)
+          : [...currentList, value],
+      };
+    });
   };
 
   // Gestisce l'invio del form
@@ -107,6 +105,8 @@ export default function NewCompetition() {
       !competitionData.dates[0] ||
       !competitionData.location ||
       competitionData.types.length === 0 ||
+      competitionData.styles.length === 0 ||
+      competitionData.distances.length === 0 ||
       !competitionData.level ||
       !competitionData.registrationDeadline
     ) {
@@ -235,7 +235,7 @@ export default function NewCompetition() {
                     type="checkbox"
                     id={`type-${type}`}
                     checked={competitionData.types.includes(type)}
-                    onChange={() => handleTypeToggle(type)}
+                    onChange={() => handleListToggle("types", type)}
                     className="checkbox-input"
                   />
                   <label htmlFor={`type-${type}`} className="checkbox-label">
@@ -246,6 +246,57 @@ export default function NewCompetition() {
             </div>
             {competitionData.types.length === 0 && (
               <p className="error-text">Seleziona almeno una tipologia</p>
+            )}
+          </div>
+
+          {/* Stili presenti in gara - Checkbox multiple */}
+          <div className="form-field">
+            <label className="form-label">Stili presenti in gara</label>
+            <div className="checkbox-group">
+              {SWIMMING_STYLES.map((style) => (
+                <div key={style} className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id={`style-${style}`}
+                    checked={competitionData.styles.includes(style)}
+                    onChange={() => handleListToggle("styles", style)}
+                    className="checkbox-input"
+                  />
+                  <label htmlFor={`style-${style}`} className="checkbox-label">
+                    {style}
+                  </label>
+                </div>
+              ))}
+            </div>
+            {competitionData.styles.length === 0 && (
+              <p className="error-text">Seleziona almeno uno stile</p>
+            )}
+          </div>
+
+          {/* Distanze presenti in gara - Checkbox multiple */}
+          <div className="form-field">
+            <label className="form-label">Distanze presenti in gara</label>
+            <div className="checkbox-group">
+              {DISTANCES.map((distance) => (
+                <div key={distance} className="checkbox-item">
+                  <input
+                    type="checkbox"
+                    id={`distance-${distance}`}
+                    checked={competitionData.distances.includes(distance)}
+                    onChange={() => handleListToggle("distances", distance)}
+                    className="checkbox-input"
+                  />
+                  <label
+                    htmlFor={`distance-${distance}`}
+                    className="checkbox-label"
+                  >
+                    {distance}
+                  </label>
+                </div>
+              ))}
+            </div>
+            {competitionData.distances.length === 0 && (
+              <p className="error-text">Seleziona almeno una distanza</p>
             )}
           </div>
 

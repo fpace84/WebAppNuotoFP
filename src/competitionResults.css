@@ -43,6 +43,18 @@
   font-size: 0.875rem;
 }
 
+.error-text {
+  color: #d32f2f;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
+.hint-text {
+  color: #2563eb;
+  font-size: 0.8rem;
+  margin-top: 4px;
+}
+
 /* Menu a tendina categorie */
 .category-dropdown {
   position: relative;

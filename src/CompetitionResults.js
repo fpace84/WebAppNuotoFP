@@ -13,6 +13,8 @@ export default function CompetitionResults() {
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef(null);
   const [races, setRaces] = useState([]);
+  const [selectedRace, setSelectedRace] = useState("");
+  const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [existingResults, setExistingResults] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -25,12 +27,17 @@ export default function CompetitionResults() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [athletesSnapshot, racesSnapshot, competitionsSnapshot] =
-          await Promise.all([
-            getDocs(collection(db, "athletes")),
-            getDocs(collection(db, "races")),
-            getDocs(collection(db, "competitions")),
-          ]);
+        const [
+          athletesSnapshot,
+          racesSnapshot,
+          competitionsSnapshot,
+          attendanceSnapshot,
+        ] = await Promise.all([
+          getDocs(collection(db, "athletes")),
+          getDocs(collection(db, "races")),
+          getDocs(collection(db, "competitions")),
+          getDocs(collection(db, "attendance")),
+        ]);
 
         // Carica e ordina atleti
         const athletesList = athletesSnapshot.docs
@@ -80,6 +87,9 @@ export default function CompetitionResults() {
         setFilteredAthletes(athletesList);
         setRaces(racesList);
         setExistingResults(resultsMap);
+        setAttendanceRecords(
+          attendanceSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
       } catch (error) {
         console.error("Errore nel caricamento dei dati:", error);
         setError("Errore nel caricamento dei dati");
@@ -123,11 +133,56 @@ export default function CompetitionResults() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Quando si seleziona una gara, precarica automaticamente gli atleti
+  // risultati presenti a quella gara (dal registro presenze), con la gara e
+  // la data già impostate su ogni riga.
+  useEffect(() => {
+    if (!selectedRace) return;
+
+    const raceData = races.find((r) => r.id === selectedRace);
+    if (!raceData) return;
+
+    const presentAthleteIds = new Set(
+      attendanceRecords
+        .filter(
+          (record) =>
+            record.type === "gara" &&
+            record.eventName === raceData.name &&
+            record.present === "Presente"
+        )
+        .map((record) => record.athleteId)
+    );
+
+    const presentAthletes = athletes.filter((a) => presentAthleteIds.has(a.id));
+
+    setSelectedAthletes(
+      presentAthletes.map((athlete) => ({
+        ...athlete,
+        entries: [
+          {
+            competitionName: raceData.name,
+            date: raceData.date,
+            style: "",
+            distance: "",
+            minutes: "",
+            seconds: "",
+            decimal: "",
+            placement: "",
+          },
+        ],
+      }))
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedRace]);
+
+
   // Controlla se esiste già un risultato per questa combinazione
   const hasExistingResult = (athleteId, competitionName, style, distance) => {
     const key = `${athleteId}-${competitionName}-${style}-${distance}`;
     return existingResults[key]?.length > 0;
   };
+
+  const selectedRaceData = races.find((r) => r.id === selectedRace);
 
   const handleAthleteSelect = (athleteId) => {
     const athlete = athletes.find((a) => a.id === athleteId);
@@ -138,8 +193,8 @@ export default function CompetitionResults() {
           ...athlete,
           entries: [
             {
-              competitionName: "",
-              date: "",
+              competitionName: selectedRaceData?.name || "",
+              date: selectedRaceData?.date || "",
               style: "",
               distance: "",
               minutes: "",
@@ -166,8 +221,8 @@ export default function CompetitionResults() {
             entries: [
               ...athlete.entries,
               {
-                competitionName: "",
-                date: "",
+                competitionName: selectedRaceData?.name || "",
+                date: selectedRaceData?.date || "",
                 style: "",
                 distance: "",
                 minutes: "",
@@ -439,6 +494,34 @@ export default function CompetitionResults() {
         <div className="card-body">
           {/* Filtri */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div style={{ gridColumn: "1 / -1" }}>
+              <label className="form-label">Gara</label>
+              <select
+                className="form-select"
+                value={selectedRace}
+                onChange={(e) => setSelectedRace(e.target.value)}
+              >
+                <option value="">Seleziona gara</option>
+                {races.map((race) => (
+                  <option key={race.id} value={race.id}>
+                    {race.name}
+                    {race.date
+                      ? ` - ${(() => {
+                          const [y, m, d] = race.date.split("-");
+                          return d && m && y ? `${d}/${m}/${y}` : race.date;
+                        })()}`
+                      : ""}
+                  </option>
+                ))}
+              </select>
+              {!selectedRace && (
+                <p className="error-text">
+                  Seleziona una gara per iniziare ad aggiungere atleti e
+                  risultati
+                </p>
+              )}
+            </div>
+
             <div>
               <label className="form-label">Tipologia</label>
               <select
@@ -538,8 +621,13 @@ export default function CompetitionResults() {
               className="form-select"
               onChange={(e) => handleAthleteSelect(e.target.value)}
               value=""
+              disabled={!selectedRace}
             >
-              <option value="">Seleziona atleta</option>
+              <option value="">
+                {selectedRace
+                  ? "Seleziona atleta"
+                  : "Seleziona prima una gara"}
+              </option>
               {filteredAthletes
                 .filter((a) => !selectedAthletes.find((sa) => sa.id === a.id))
                 .map((athlete) => (
@@ -548,6 +636,13 @@ export default function CompetitionResults() {
                   </option>
                 ))}
             </select>
+            {selectedRace && (
+              <p className="hint-text">
+                {selectedAthletes.length > 0
+                  ? `${selectedAthletes.length} atleti già presenti in gara, caricati automaticamente dal registro presenze. Usa questo menu per aggiungerne altri.`
+                  : "Nessun atleta risulta presente a questa gara nel registro presenze. Aggiungili manualmente da qui."}
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -576,8 +671,6 @@ export default function CompetitionResults() {
               <table className="table">
                 <thead className="table-header">
                   <tr>
-                    <th>Gara</th>
-                    <th>Data</th>
                     <th>Stile</th>
                     <th>Distanza</th>
                     <th>Minuti</th>
@@ -593,43 +686,6 @@ export default function CompetitionResults() {
                       <td>
                         <select
                           className="form-select"
-                          value={entry.competitionName}
-                          onChange={(e) =>
-                            updateEntry(
-                              athlete.id,
-                              index,
-                              "competitionName",
-                              e.target.value
-                            )
-                          }
-                        >
-                          <option value="">Seleziona gara</option>
-                          {races.map((race) => (
-                            <option key={race.id} value={race.name}>
-                              {race.name}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td>
-                        <input
-                          type="date"
-                          className="form-input"
-                          value={entry.date}
-                          onChange={(e) =>
-                            updateEntry(
-                              athlete.id,
-                              index,
-                              "date",
-                              e.target.value
-                            )
-                          }
-                          disabled={entry.competitionName !== ""}
-                        />
-                      </td>
-                      <td>
-                        <select
-                          className="form-select"
                           value={entry.style}
                           onChange={(e) =>
                             updateEntry(
@@ -641,7 +697,10 @@ export default function CompetitionResults() {
                           }
                         >
                           <option value="">Seleziona stile</option>
-                          {styles.map((style) => (
+                          {(selectedRaceData?.styles?.length > 0
+                            ? selectedRaceData.styles
+                            : styles
+                          ).map((style) => (
                             <option key={style} value={style}>
                               {style}
                             </option>
@@ -662,7 +721,10 @@ export default function CompetitionResults() {
                           }
                         >
                           <option value="">Seleziona distanza</option>
-                          {distances.map((distance) => (
+                          {(selectedRaceData?.distances?.length > 0
+                            ? selectedRaceData.distances
+                            : distances
+                          ).map((distance) => (
                             <option key={distance} value={distance}>
                               {distance}
                             </option>
