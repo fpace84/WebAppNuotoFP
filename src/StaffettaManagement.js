@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { db } from "./firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { calculateCategory } from "./categories";
@@ -101,6 +101,97 @@ export default function StaffettaManagement() {
   const [availableRankingCategories, setAvailableRankingCategories] = useState(
     []
   );
+
+  // Stato condiviso per il menu a tendina categorie (un solo tab alla volta è visibile)
+  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
+  const categoryDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        categoryDropdownRef.current &&
+        !categoryDropdownRef.current.contains(event.target)
+      ) {
+        setIsCategoryDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Menu a tendina categorie riutilizzabile (Seleziona tutte + checkbox),
+  // usato nei tab Auto, Manuale e Classifica.
+  const renderCategoryDropdown = (
+    availableList,
+    selectedList,
+    onChange,
+    emptyHint
+  ) => {
+    const allSelected =
+      availableList.length > 0 && selectedList.length === availableList.length;
+
+    return (
+      <div className="category-dropdown" ref={categoryDropdownRef}>
+        <button
+          type="button"
+          onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
+          className={`category-dropdown-toggle ${
+            isCategoryDropdownOpen ? "open" : ""
+          }`}
+        >
+          <span>
+            {selectedList.length > 0
+              ? `${selectedList.length} categorie selezionate`
+              : emptyHint}
+          </span>
+          <span className="category-dropdown-caret">▾</span>
+        </button>
+
+        {isCategoryDropdownOpen && (
+          <div className="category-dropdown-panel">
+            <label className="category-dropdown-item select-all">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={() => onChange(allSelected ? [] : [...availableList])}
+                disabled={availableList.length === 0}
+              />
+              <span>Seleziona tutte</span>
+            </label>
+            <div className="category-dropdown-list">
+              {availableList.length === 0 ? (
+                <div className="category-dropdown-empty">
+                  Nessuna categoria disponibile
+                </div>
+              ) : (
+                availableList.map((cat) => (
+                  <label
+                    key={cat}
+                    className={`category-dropdown-item ${
+                      selectedList.includes(cat) ? "selected" : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedList.includes(cat)}
+                      onChange={() =>
+                        onChange(
+                          selectedList.includes(cat)
+                            ? selectedList.filter((c) => c !== cat)
+                            : [...selectedList, cat]
+                        )
+                      }
+                    />
+                    <span>{cat}</span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Effect per resettare gli atleti usati quando cambiano i parametri
   useEffect(() => {
@@ -277,10 +368,10 @@ export default function StaffettaManagement() {
 
         if (settings.staffettaType === "mista") {
           const styles = ["dorso", "rana", "farfalla", "stilelibero"];
-          const position = formationAthletes.length;
-          const style = styles[position];
-          const timeKey = `${style}_${settings.distance}`;
-          return athleteTimes[athlete.id]?.[timeKey];
+          return styles.some((style) => {
+            const timeKey = `${style}_${settings.distance}`;
+            return athleteTimes[athlete.id]?.[timeKey];
+          });
         }
 
         const timeKey = `stilelibero_${settings.distance}`;
@@ -995,31 +1086,13 @@ export default function StaffettaManagement() {
           {settings.type && (
             <div className="form-group">
               <label>Categoria</label>
-              <select
-                multiple
-                value={settings.categories}
-                onChange={(e) => {
-                  const selectedOptions = Array.from(
-                    e.target.selectedOptions,
-                    (option) => option.value
-                  );
-                  setSettings({ ...settings, categories: selectedOptions });
-                }}
-                className="form-select"
-                size={Math.min(4, categories.length)}
-                style={{ height: "auto" }}
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <div className="help-text">
-                {settings.categories.length === 0
-                  ? "Seleziona almeno una categoria"
-                  : `Categorie selezionate: ${settings.categories.join(", ")}`}
-              </div>
+              {renderCategoryDropdown(
+                categories,
+                settings.categories,
+                (newCategories) =>
+                  setSettings({ ...settings, categories: newCategories }),
+                "Nessuna categoria selezionata"
+              )}
             </div>
           )}
 
@@ -1137,31 +1210,13 @@ export default function StaffettaManagement() {
           {settings.type && (
             <div className="form-group">
               <label>Categoria</label>
-              <select
-                multiple
-                value={settings.categories}
-                onChange={(e) => {
-                  const selectedOptions = Array.from(
-                    e.target.selectedOptions,
-                    (option) => option.value
-                  );
-                  setSettings({ ...settings, categories: selectedOptions });
-                }}
-                className="form-select"
-                size={Math.min(4, categories.length)}
-                style={{ height: "auto" }}
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <div className="help-text">
-                {settings.categories.length === 0
-                  ? "Seleziona almeno una categoria"
-                  : `Categorie selezionate: ${settings.categories.join(", ")}`}
-              </div>
+              {renderCategoryDropdown(
+                categories,
+                settings.categories,
+                (newCategories) =>
+                  setSettings({ ...settings, categories: newCategories }),
+                "Nessuna categoria selezionata"
+              )}
             </div>
           )}
 
@@ -1579,36 +1634,16 @@ export default function StaffettaManagement() {
 
             <div className="form-group">
               <label>Categorie</label>
-              <select
-                multiple
-                value={rankingFilters.categories}
-                onChange={(e) => {
-                  const selectedOptions = Array.from(
-                    e.target.selectedOptions,
-                    (option) => option.value
-                  );
+              {renderCategoryDropdown(
+                availableRankingCategories,
+                rankingFilters.categories,
+                (newCategories) =>
                   setRankingFilters({
                     ...rankingFilters,
-                    categories: selectedOptions,
-                  });
-                }}
-                className="form-select"
-                size={Math.min(6, availableRankingCategories.length)}
-                style={{ height: "auto" }}
-              >
-                {availableRankingCategories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
-              <div className="help-text">
-                {rankingFilters.categories.length === 0
-                  ? "Lascia vuoto per tutte le categorie o seleziona una o più categorie"
-                  : `Categorie selezionate: ${rankingFilters.categories.join(
-                      ", "
-                    )}`}
-              </div>
+                    categories: newCategories,
+                  }),
+                "Tutte le categorie"
+              )}
             </div>
           </div>
 
