@@ -1389,10 +1389,24 @@ export default function TrainingTimes() {
             {groupStyle} - {groupDistance}
           </div>
 
+          <div
+            style={{
+              height: "70vh",
+              overflowY: "auto",
+              scrollSnapType: "y mandatory",
+              borderRadius: "12px",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
           {heats.map((heat) => (
             <div
               key={heat.heatNumber}
               style={{
+                height: "100%",
+                scrollSnapAlign: "start",
+                scrollSnapStop: "always",
+                overflowY: "auto",
+                boxSizing: "border-box",
                 marginBottom: "24px",
                 padding: "16px",
                 backgroundColor: "#f8f9fa",
@@ -1543,6 +1557,7 @@ export default function TrainingTimes() {
               ))}
             </div>
           ))}
+          </div>
 
           <div
             style={{
