@@ -13,12 +13,13 @@ export default function NewCompetition() {
     dates: [""],
     location: "",
     types: [],
-    styles: [],
-    distances: [],
+    specialties: [],
     level: "",
     registrationDeadline: "",
     status: "upcoming",
   });
+  const [newSpecialtyStyle, setNewSpecialtyStyle] = useState("");
+  const [newSpecialtyDistance, setNewSpecialtyDistance] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -80,7 +81,7 @@ export default function NewCompetition() {
     }));
   };
 
-  // Gestisce la selezione di valori in un elenco (tipologie, stili, distanze)
+  // Gestisce la selezione di valori in un elenco (tipologie)
   const handleListToggle = (field, value) => {
     setCompetitionData((prev) => {
       const currentList = prev[field];
@@ -91,6 +92,33 @@ export default function NewCompetition() {
           : [...currentList, value],
       };
     });
+  };
+
+  // Aggiunge una specialità (coppia stile+distanza) all'elenco della gara
+  const addSpecialty = () => {
+    if (!newSpecialtyStyle || !newSpecialtyDistance) return;
+    const alreadyExists = competitionData.specialties.some(
+      (s) => s.style === newSpecialtyStyle && s.distance === newSpecialtyDistance
+    );
+    if (alreadyExists) return;
+
+    setCompetitionData((prev) => ({
+      ...prev,
+      specialties: [
+        ...prev.specialties,
+        { style: newSpecialtyStyle, distance: newSpecialtyDistance },
+      ],
+    }));
+    setNewSpecialtyStyle("");
+    setNewSpecialtyDistance("");
+  };
+
+  // Rimuove una specialità dall'elenco della gara
+  const removeSpecialty = (index) => {
+    setCompetitionData((prev) => ({
+      ...prev,
+      specialties: prev.specialties.filter((_, i) => i !== index),
+    }));
   };
 
   // Gestisce l'invio del form
@@ -105,8 +133,7 @@ export default function NewCompetition() {
       !competitionData.dates[0] ||
       !competitionData.location ||
       competitionData.types.length === 0 ||
-      competitionData.styles.length === 0 ||
-      competitionData.distances.length === 0 ||
+      competitionData.specialties.length === 0 ||
       !competitionData.level ||
       !competitionData.registrationDeadline
     ) {
@@ -249,54 +276,69 @@ export default function NewCompetition() {
             )}
           </div>
 
-          {/* Stili presenti in gara - Checkbox multiple */}
+          {/* Specialità presenti in gara (coppie stile+distanza) */}
           <div className="form-field">
-            <label className="form-label">Stili presenti in gara</label>
-            <div className="checkbox-group">
-              {SWIMMING_STYLES.map((style) => (
-                <div key={style} className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id={`style-${style}`}
-                    checked={competitionData.styles.includes(style)}
-                    onChange={() => handleListToggle("styles", style)}
-                    className="checkbox-input"
-                  />
-                  <label htmlFor={`style-${style}`} className="checkbox-label">
-                    {style}
-                  </label>
-                </div>
-              ))}
+            <label className="form-label">Specialità presenti in gara</label>
+            <div className="dates-container">
+              <div className="date-input-group">
+                <select
+                  className="form-select"
+                  value={newSpecialtyDistance}
+                  onChange={(e) => setNewSpecialtyDistance(e.target.value)}
+                >
+                  <option value="">Distanza</option>
+                  {DISTANCES.map((distance) => (
+                    <option key={distance} value={distance}>
+                      {distance}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  className="form-select"
+                  value={newSpecialtyStyle}
+                  onChange={(e) => setNewSpecialtyStyle(e.target.value)}
+                >
+                  <option value="">Stile</option>
+                  {SWIMMING_STYLES.map((style) => (
+                    <option key={style} value={style}>
+                      {style}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
-            {competitionData.styles.length === 0 && (
-              <p className="error-text">Seleziona almeno uno stile</p>
-            )}
-          </div>
+            <button
+              type="button"
+              onClick={addSpecialty}
+              disabled={!newSpecialtyStyle || !newSpecialtyDistance}
+              className="add-date-btn"
+            >
+              + Aggiungi specialità
+            </button>
 
-          {/* Distanze presenti in gara - Checkbox multiple */}
-          <div className="form-field">
-            <label className="form-label">Distanze presenti in gara</label>
-            <div className="checkbox-group">
-              {DISTANCES.map((distance) => (
-                <div key={distance} className="checkbox-item">
-                  <input
-                    type="checkbox"
-                    id={`distance-${distance}`}
-                    checked={competitionData.distances.includes(distance)}
-                    onChange={() => handleListToggle("distances", distance)}
-                    className="checkbox-input"
-                  />
-                  <label
-                    htmlFor={`distance-${distance}`}
-                    className="checkbox-label"
-                  >
-                    {distance}
-                  </label>
-                </div>
-              ))}
-            </div>
-            {competitionData.distances.length === 0 && (
-              <p className="error-text">Seleziona almeno una distanza</p>
+            {competitionData.specialties.length > 0 && (
+              <div className="checkbox-group" style={{ marginTop: "12px" }}>
+                {competitionData.specialties.map((specialty, index) => (
+                  <div key={index} className="checkbox-item">
+                    <span className="checkbox-label">
+                      {specialty.distance} {specialty.style}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => removeSpecialty(index)}
+                      className="remove-date-btn"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {competitionData.specialties.length === 0 && (
+              <p className="error-text">
+                Aggiungi almeno una specialità (stile + distanza)
+              </p>
             )}
           </div>
 

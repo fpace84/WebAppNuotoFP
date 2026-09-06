@@ -69,6 +69,7 @@
 .date-input-group {
   display: flex;
   align-items: center;
+  gap: 8px;
   margin-bottom: 8px;
 }
 
@@ -101,6 +102,10 @@
 .checkbox-item {
   display: flex;
   align-items: center;
+  gap: 6px;
+  background-color: #f3f4f6;
+  border-radius: 6px;
+  padding: 4px 6px;
 }
 
 /* Modifica lo stile delle checkbox per renderle visibili */

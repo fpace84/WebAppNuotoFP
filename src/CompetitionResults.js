@@ -257,7 +257,19 @@ export default function CompetitionResults() {
       selectedAthletes.map((athlete) => {
         if (athlete.id === athleteId) {
           const newEntries = [...athlete.entries];
-          newEntries[index] = { ...newEntries[index], [field]: value };
+
+          if (field === "specialty") {
+            // Campo virtuale: il valore codifica "distanza|stile" e imposta
+            // entrambi i campi reali in un colpo solo.
+            const [distance, style] = value.split("|");
+            newEntries[index] = {
+              ...newEntries[index],
+              distance: distance || "",
+              style: style || "",
+            };
+          } else {
+            newEntries[index] = { ...newEntries[index], [field]: value };
+          }
 
           // Se viene selezionata una gara esistente, imposta anche la data
           if (field === "competitionName" && value !== "altro") {
@@ -671,8 +683,7 @@ export default function CompetitionResults() {
               <table className="table">
                 <thead className="table-header">
                   <tr>
-                    <th>Stile</th>
-                    <th>Distanza</th>
+                    <th>Specialità</th>
                     <th>Minuti</th>
                     <th>Secondi</th>
                     <th>Centesimi</th>
@@ -681,52 +692,40 @@ export default function CompetitionResults() {
                   </tr>
                 </thead>
                 <tbody>
-                  {athlete.entries.map((entry, index) => (
+                  {athlete.entries.map((entry, index) => {
+                    const specialtyOptions =
+                      selectedRaceData?.specialties?.length > 0
+                        ? selectedRaceData.specialties
+                        : distances.flatMap((distance) =>
+                            styles.map((style) => ({ distance, style }))
+                          );
+                    const currentSpecialtyValue =
+                      entry.distance && entry.style
+                        ? `${entry.distance}|${entry.style}`
+                        : "";
+
+                    return (
                     <tr key={index} className="table-row">
                       <td>
                         <select
                           className="form-select"
-                          value={entry.style}
+                          value={currentSpecialtyValue}
                           onChange={(e) =>
                             updateEntry(
                               athlete.id,
                               index,
-                              "style",
+                              "specialty",
                               e.target.value
                             )
                           }
                         >
-                          <option value="">Seleziona stile</option>
-                          {(selectedRaceData?.styles?.length > 0
-                            ? selectedRaceData.styles
-                            : styles
-                          ).map((style) => (
-                            <option key={style} value={style}>
-                              {style}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td>
-                        <select
-                          className="form-select"
-                          value={entry.distance}
-                          onChange={(e) =>
-                            updateEntry(
-                              athlete.id,
-                              index,
-                              "distance",
-                              e.target.value
-                            )
-                          }
-                        >
-                          <option value="">Seleziona distanza</option>
-                          {(selectedRaceData?.distances?.length > 0
-                            ? selectedRaceData.distances
-                            : distances
-                          ).map((distance) => (
-                            <option key={distance} value={distance}>
-                              {distance}
+                          <option value="">Seleziona specialità</option>
+                          {specialtyOptions.map((specialty) => (
+                            <option
+                              key={`${specialty.distance}|${specialty.style}`}
+                              value={`${specialty.distance}|${specialty.style}`}
+                            >
+                              {specialty.distance} {specialty.style}
                             </option>
                           ))}
                         </select>
@@ -835,7 +834,8 @@ export default function CompetitionResults() {
                         </button>
                       </td>
                     </tr>
-                  ))}
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
