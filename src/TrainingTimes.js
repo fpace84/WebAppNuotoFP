@@ -998,16 +998,30 @@ export default function TrainingTimes() {
 
       {mode === "individual" && individualEntries.length > 0 && (
         <div>
-          {individualEntries.map((athlete) => (
-            <div
-              key={athlete.id}
-              style={{
-                marginBottom: "20px",
-                padding: "16px",
-                backgroundColor: "#f8f9fa",
-                borderRadius: "12px",
-              }}
-            >
+          <div
+            style={{
+              height: "70vh",
+              overflowY: "auto",
+              scrollSnapType: "y mandatory",
+              borderRadius: "12px",
+              WebkitOverflowScrolling: "touch",
+            }}
+          >
+            {individualEntries.map((athlete) => (
+              <div
+                key={athlete.id}
+                style={{
+                  height: "100%",
+                  scrollSnapAlign: "start",
+                  scrollSnapStop: "always",
+                  overflowY: "auto",
+                  boxSizing: "border-box",
+                  padding: "16px",
+                  backgroundColor: "#f8f9fa",
+                  borderRadius: "12px",
+                  marginBottom: "12px",
+                }}
+              >
               <div
                 style={{
                   display: "flex",
@@ -1284,8 +1298,9 @@ export default function TrainingTimes() {
               >
                 + Aggiungi Tempo
               </button>
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
 
           <div
             style={{
