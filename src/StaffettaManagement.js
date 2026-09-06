@@ -518,8 +518,27 @@ export default function StaffettaManagement() {
           if (!timeData) return;
 
           const time = timeToMilliseconds(timeData.timeFormatted);
-          const newRemaining = [...remaining];
-          newRemaining.splice(index, 1);
+
+          // Per la staffetta mista l'ordine conta (ogni posizione richiede
+          // uno stile diverso, quindi chi nuota cosa è significativo).
+          // Per la staffetta a stile libero l'ordine NON conta: tutti
+          // nuotano lo stesso stile, quindi la stessa squadra di 4 atleti
+          // in ordini diversi è la stessa identica formazione. Esplorare
+          // tutti gli ordinamenti (permutazioni) in quel caso genera 24
+          // "formazioni" duplicate per ogni vera squadra, con lo stesso
+          // tempo totale: questo falsava il rilevamento delle parità,
+          // facendo credere che ci fossero atleti diversi in competizione
+          // quando in realtà era la stessa squadra rimescolata. Per lo
+          // stile libero si esplorano quindi solo le combinazioni (si
+          // procede sempre in avanti nell'elenco, senza tornare indietro).
+          const newRemaining =
+            settings.staffettaType === "mista"
+              ? (() => {
+                  const r = [...remaining];
+                  r.splice(index, 1);
+                  return r;
+                })()
+              : remaining.slice(index + 1);
 
           generateFormations(
             newRemaining,
