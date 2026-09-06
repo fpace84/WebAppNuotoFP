@@ -103,6 +103,26 @@ export default function ClothingManagement() {
     }));
   };
 
+  const handleResetSizesAndQuantities = () => {
+    const confirmed = window.confirm(
+      "Sei sicuro di voler azzerare taglie e quantità per tutti i capi? Lo stato \"Consegnato\" non verrà modificato."
+    );
+    if (!confirmed) return;
+
+    setClothingState((prev) => {
+      const resetState = {};
+      clothingItems.forEach((item) => {
+        resetState[item.name] = {
+          ...prev[item.name],
+          size: "",
+          customSize: "",
+          quantity: 0,
+        };
+      });
+      return resetState;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (id) {
@@ -231,6 +251,13 @@ export default function ClothingManagement() {
                 ))}
               </div>
               <div className="button-container">
+                <button
+                  type="button"
+                  onClick={handleResetSizesAndQuantities}
+                  className="cancel-button"
+                >
+                  🔄 Azzera Taglie e Quantità
+                </button>
                 <button
                   type="button"
                   onClick={() => navigate(`/athlete/${id}`)}

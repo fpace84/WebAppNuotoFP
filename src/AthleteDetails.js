@@ -9,6 +9,7 @@ import {
   where,
   getDocs,
   updateDoc,
+  deleteDoc,
 } from "firebase/firestore";
 import { calculateCategory } from "./categories";
 import "./athleteDetails.css";
@@ -290,6 +291,30 @@ export default function AthleteDetails() {
     } catch (err) {
       console.error("Errore nel salvataggio:", err);
       alert("Errore nel salvataggio del risultato");
+    }
+  };
+
+  const handleDeleteCompetition = async () => {
+    if (!editingCompetition) return;
+
+    const confirmed = window.confirm(
+      "Sei sicuro di voler eliminare questo risultato di gara? L'operazione non può essere annullata."
+    );
+    if (!confirmed) return;
+
+    try {
+      await deleteDoc(doc(db, "competitions", editingCompetition.id));
+
+      // Aggiorna lo stato locale
+      setCompetitionResults((prev) =>
+        prev.filter((c) => c.id !== editingCompetition.id)
+      );
+
+      setEditingCompetition(null);
+      alert("Risultato di gara eliminato con successo!");
+    } catch (err) {
+      console.error("Errore nell'eliminazione:", err);
+      alert("Errore nell'eliminazione del risultato");
     }
   };
 
@@ -776,8 +801,14 @@ export default function AthleteDetails() {
               ✅ Salva
             </button>
             <button
+              onClick={handleDeleteCompetition}
+              className="flex-1 bg-red-600 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-red-700 transition-colors duration-200 shadow-md"
+            >
+              🗑️ Elimina
+            </button>
+            <button
               onClick={() => setEditingCompetition(null)}
-              className="flex-1 bg-red-500 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-red-600 transition-colors duration-200 shadow-md"
+              className="flex-1 bg-gray-400 text-white px-4 py-2.5 rounded-lg font-medium hover:bg-gray-500 transition-colors duration-200 shadow-md"
             >
               ❌ Annulla
             </button>
