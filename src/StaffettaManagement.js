@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { db } from "./firebase";
 import { collection, getDocs } from "firebase/firestore";
-import { calculateCategory } from "./categories";
+import { calculateCategory, ATHLETE_TYPES } from "./categories";
 import { formatTime, timeToMilliseconds } from "./FormatTime";
 import "./staffettaManagement.css";
 
@@ -47,6 +47,85 @@ const formatDate = (date) => {
   return new Date(date).toLocaleDateString();
 };
 
+// Menu a tendina riutilizzabile (Seleziona tutte + checkbox), con stato di
+// apertura indipendente per ogni istanza (usato per Categorie e Tipologie).
+function CategoryDropdown({ options, selected, onChange, emptyHint }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const allSelected = options.length > 0 && selected.length === options.length;
+
+  return (
+    <div className="category-dropdown" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={`category-dropdown-toggle ${isOpen ? "open" : ""}`}
+      >
+        <span>
+          {selected.length > 0
+            ? `${selected.length} selezionate`
+            : emptyHint}
+        </span>
+        <span className="category-dropdown-caret">▾</span>
+      </button>
+
+      {isOpen && (
+        <div className="category-dropdown-panel">
+          <label className="category-dropdown-item select-all">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              onChange={() => onChange(allSelected ? [] : [...options])}
+              disabled={options.length === 0}
+            />
+            <span>Seleziona tutte</span>
+          </label>
+          <div className="category-dropdown-list">
+            {options.length === 0 ? (
+              <div className="category-dropdown-empty">
+                Nessuna opzione disponibile
+              </div>
+            ) : (
+              options.map((opt) => (
+                <label
+                  key={opt}
+                  className={`category-dropdown-item ${
+                    selected.includes(opt) ? "selected" : ""
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selected.includes(opt)}
+                    onChange={() =>
+                      onChange(
+                        selected.includes(opt)
+                          ? selected.filter((c) => c !== opt)
+                          : [...selected, opt]
+                      )
+                    }
+                  />
+                  <span>{opt}</span>
+                </label>
+              ))
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function StaffettaManagement() {
   // Stati principali
   const [activeTab, setActiveTab] = useState("auto");
@@ -81,6 +160,11 @@ export default function StaffettaManagement() {
   const [athletes, setAthletes] = useState([]);
   const [athleteTimes, setAthleteTimes] = useState({});
   const [formations, setFormations] = useState([]);
+  // Quando due atleti hanno lo stesso tempo migliore per la stessa
+  // posizione/stile/distanza e non è possibile stabilire una preferenza
+  // automatica (gara batte allenamento), la generazione si ferma e questo
+  // stato contiene i dettagli per chiedere conferma all'utente.
+  const [pendingTieBreak, setPendingTieBreak] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [categories, setCategories] = useState([]);
@@ -101,97 +185,6 @@ export default function StaffettaManagement() {
   const [availableRankingCategories, setAvailableRankingCategories] = useState(
     []
   );
-
-  // Stato condiviso per il menu a tendina categorie (un solo tab alla volta è visibile)
-  const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
-  const categoryDropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        categoryDropdownRef.current &&
-        !categoryDropdownRef.current.contains(event.target)
-      ) {
-        setIsCategoryDropdownOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  // Menu a tendina categorie riutilizzabile (Seleziona tutte + checkbox),
-  // usato nei tab Auto, Manuale e Classifica.
-  const renderCategoryDropdown = (
-    availableList,
-    selectedList,
-    onChange,
-    emptyHint
-  ) => {
-    const allSelected =
-      availableList.length > 0 && selectedList.length === availableList.length;
-
-    return (
-      <div className="category-dropdown" ref={categoryDropdownRef}>
-        <button
-          type="button"
-          onClick={() => setIsCategoryDropdownOpen((prev) => !prev)}
-          className={`category-dropdown-toggle ${
-            isCategoryDropdownOpen ? "open" : ""
-          }`}
-        >
-          <span>
-            {selectedList.length > 0
-              ? `${selectedList.length} categorie selezionate`
-              : emptyHint}
-          </span>
-          <span className="category-dropdown-caret">▾</span>
-        </button>
-
-        {isCategoryDropdownOpen && (
-          <div className="category-dropdown-panel">
-            <label className="category-dropdown-item select-all">
-              <input
-                type="checkbox"
-                checked={allSelected}
-                onChange={() => onChange(allSelected ? [] : [...availableList])}
-                disabled={availableList.length === 0}
-              />
-              <span>Seleziona tutte</span>
-            </label>
-            <div className="category-dropdown-list">
-              {availableList.length === 0 ? (
-                <div className="category-dropdown-empty">
-                  Nessuna categoria disponibile
-                </div>
-              ) : (
-                availableList.map((cat) => (
-                  <label
-                    key={cat}
-                    className={`category-dropdown-item ${
-                      selectedList.includes(cat) ? "selected" : ""
-                    }`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedList.includes(cat)}
-                      onChange={() =>
-                        onChange(
-                          selectedList.includes(cat)
-                            ? selectedList.filter((c) => c !== cat)
-                            : [...selectedList, cat]
-                        )
-                      }
-                    />
-                    <span>{cat}</span>
-                  </label>
-                ))
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   // Effect per resettare gli atleti usati quando cambiano i parametri
   useEffect(() => {
@@ -381,6 +374,85 @@ export default function StaffettaManagement() {
     [athletes, athleteTimes, settings, usedAthletes]
   );
 
+  // Analizza un gruppo di formazioni con lo stesso tempo totale e cerca di
+  // capire, posizione per posizione, se c'è più di un atleta possibile a
+  // parità di tempo. Se sì, preferisce automaticamente chi ha fatto quel
+  // tempo in gara rispetto a chi l'ha fatto in allenamento. Se anche la
+  // fonte è la stessa per entrambi, restituisce needsUserInput con i
+  // dettagli per chiedere conferma all'utente.
+  const resolveFormationTies = (tiedFormations) => {
+    let candidates = [...tiedFormations];
+
+    while (candidates.length > 1) {
+      let tiePosition = -1;
+      let distinctAthleteIds = [];
+
+      for (let pos = 0; pos < 4; pos++) {
+        const ids = [
+          ...new Set(candidates.map((f) => f.formation[pos].athlete.id)),
+        ];
+        if (ids.length > 1) {
+          tiePosition = pos;
+          distinctAthleteIds = ids;
+          break;
+        }
+      }
+
+      if (tiePosition === -1) break;
+
+      const posEntries = distinctAthleteIds.map((athleteId) => {
+        const f = candidates.find(
+          (formation) => formation.formation[tiePosition].athlete.id === athleteId
+        );
+        return f.formation[tiePosition];
+      });
+
+      const garaEntries = posEntries.filter((e) => e.type === "gara");
+
+      if (garaEntries.length > 0 && garaEntries.length < posEntries.length) {
+        // Almeno uno ha fatto il tempo in gara e almeno uno in allenamento:
+        // si preferisce automaticamente chi l'ha fatto in gara.
+        const keepIds = new Set(garaEntries.map((e) => e.athlete.id));
+        candidates = candidates.filter((f) =>
+          keepIds.has(f.formation[tiePosition].athlete.id)
+        );
+        continue;
+      }
+
+      // Tutti gara oppure tutti allenamento: serve la conferma dell'utente
+      return {
+        needsUserInput: {
+          position: tiePosition,
+          style: posEntries[0].style,
+          timeFormatted: posEntries[0].bestTime,
+          sourceType: posEntries[0].type,
+          candidates: posEntries.map((e) => ({
+            athleteId: e.athlete.id,
+            athleteName: `${e.athlete.lastName} ${e.athlete.name}`,
+          })),
+          tiedFormations: candidates,
+        },
+      };
+    }
+
+    return { resolved: candidates[0] };
+  };
+
+  // Finalizza una formazione: la aggiunge all'elenco e segna gli atleti come usati
+  const finalizeFormation = (bestFormation) => {
+    bestFormation.formation.forEach((pos) => {
+      setUsedAthletes((prev) => new Set([...prev, pos.athlete.id]));
+    });
+
+    const result = {
+      formation: bestFormation.formation,
+      totalTime: bestFormation.totalTime,
+      formattedTotalTime: millisecondsToFormattedTime(bestFormation.totalTime),
+    };
+    setFormations((prev) => [...prev, result]);
+    return result;
+  };
+
   const calculateBestFormation = useCallback(
     (eligibleAthletes) => {
       let allPossibleFormations = [];
@@ -475,23 +547,54 @@ export default function StaffettaManagement() {
 
       if (allPossibleFormations.length === 0) return null;
 
-      const bestFormation = allPossibleFormations[0];
+      const bestTime = allPossibleFormations[0].totalTime;
+      const tiedFormations = allPossibleFormations.filter(
+        (f) => f.totalTime === bestTime
+      );
 
-      // Aggiungi gli atleti usati al set
-      bestFormation.formation.forEach((pos) => {
-        setUsedAthletes((prev) => new Set([...prev, pos.athlete.id]));
-      });
+      if (tiedFormations.length === 1) {
+        return finalizeFormation(tiedFormations[0]);
+      }
 
-      return {
-        formation: bestFormation.formation,
-        totalTime: bestFormation.totalTime,
-        formattedTotalTime: millisecondsToFormattedTime(
-          bestFormation.totalTime
-        ),
-      };
+      const resolution = resolveFormationTies(tiedFormations);
+
+      if (resolution.resolved) {
+        return finalizeFormation(resolution.resolved);
+      }
+
+      // Serve la conferma dell'utente prima di procedere
+      setPendingTieBreak(resolution.needsUserInput);
+      return { pending: true };
     },
     [athleteTimes, settings]
   );
+
+  // Chiamata quando l'utente sceglie un atleta nel modale di parità
+  const resolveTieBreak = (chosenAthleteId) => {
+    if (!pendingTieBreak) return;
+
+    const { position, tiedFormations } = pendingTieBreak;
+    const filtered = tiedFormations.filter(
+      (f) => f.formation[position].athlete.id === chosenAthleteId
+    );
+
+    setPendingTieBreak(null);
+
+    if (filtered.length === 1) {
+      finalizeFormation(filtered[0]);
+      setActiveTab("formations");
+      return;
+    }
+
+    const resolution = resolveFormationTies(filtered);
+    if (resolution.resolved) {
+      finalizeFormation(resolution.resolved);
+      setActiveTab("formations");
+    } else {
+      // C'è un'altra parità da chiarire (caso raro, altra posizione)
+      setPendingTieBreak(resolution.needsUserInput);
+    }
+  };
 
   const handleCreateAutoFormation = useCallback(async () => {
     try {
@@ -516,8 +619,10 @@ export default function StaffettaManagement() {
       }
 
       const bestFormation = calculateBestFormation(eligibleAthletes);
-      if (bestFormation) {
-        setFormations((prev) => [...prev, bestFormation]);
+      if (bestFormation?.pending) {
+        // In attesa che l'utente risolva la parità: non fare nulla,
+        // il modale di conferma si occupa del resto.
+      } else if (bestFormation) {
         setActiveTab("formations");
       } else {
         throw new Error(
@@ -1086,13 +1191,14 @@ export default function StaffettaManagement() {
           {settings.type && (
             <div className="form-group">
               <label>Categoria</label>
-              {renderCategoryDropdown(
-                categories,
-                settings.categories,
-                (newCategories) =>
-                  setSettings({ ...settings, categories: newCategories }),
-                "Nessuna categoria selezionata"
-              )}
+              <CategoryDropdown
+                options={categories}
+                selected={settings.categories}
+                onChange={(newCategories) =>
+                  setSettings({ ...settings, categories: newCategories })
+                }
+                emptyHint="Nessuna categoria selezionata"
+              />
             </div>
           )}
 
@@ -1210,13 +1316,14 @@ export default function StaffettaManagement() {
           {settings.type && (
             <div className="form-group">
               <label>Categoria</label>
-              {renderCategoryDropdown(
-                categories,
-                settings.categories,
-                (newCategories) =>
-                  setSettings({ ...settings, categories: newCategories }),
-                "Nessuna categoria selezionata"
-              )}
+              <CategoryDropdown
+                options={categories}
+                selected={settings.categories}
+                onChange={(newCategories) =>
+                  setSettings({ ...settings, categories: newCategories })
+                }
+                emptyHint="Nessuna categoria selezionata"
+              />
             </div>
           )}
 
@@ -1603,47 +1710,33 @@ export default function StaffettaManagement() {
 
             <div className="form-group">
               <label>Tipologie</label>
-              <select
-                multiple
-                value={rankingFilters.types}
-                onChange={(e) => {
-                  const selectedOptions = Array.from(
-                    e.target.selectedOptions,
-                    (option) => option.value
-                  );
+              <CategoryDropdown
+                options={ATHLETE_TYPES}
+                selected={rankingFilters.types}
+                onChange={(newTypes) =>
                   setRankingFilters({
                     ...rankingFilters,
-                    types: selectedOptions,
+                    types: newTypes,
                     categories: [],
-                  });
-                }}
-                className="form-select"
-                size={3}
-                style={{ height: "auto" }}
-              >
-                <option value="Propaganda">Propaganda</option>
-                <option value="Agonista">Agonista</option>
-                <option value="Master">Master</option>
-              </select>
-              <div className="help-text">
-                {rankingFilters.types.length === 0
-                  ? "Lascia vuoto per tutte le tipologie o seleziona una o più tipologie"
-                  : `Tipologie selezionate: ${rankingFilters.types.join(", ")}`}
-              </div>
+                  })
+                }
+                emptyHint="Tutte le tipologie"
+              />
             </div>
 
             <div className="form-group">
               <label>Categorie</label>
-              {renderCategoryDropdown(
-                availableRankingCategories,
-                rankingFilters.categories,
-                (newCategories) =>
+              <CategoryDropdown
+                options={availableRankingCategories}
+                selected={rankingFilters.categories}
+                onChange={(newCategories) =>
                   setRankingFilters({
                     ...rankingFilters,
                     categories: newCategories,
-                  }),
-                "Tutte le categorie"
-              )}
+                  })
+                }
+                emptyHint="Tutte le categorie"
+              />
             </div>
           </div>
 
@@ -1800,6 +1893,38 @@ export default function StaffettaManagement() {
             >
               Annulla
             </button>
+          </div>
+        </div>
+      )}
+
+      {pendingTieBreak && (
+        <div className="modal-overlay">
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <h3 className="modal-title">Parità di tempo da risolvere</h3>
+            <p style={{ marginBottom: "16px", color: "#333" }}>
+              {pendingTieBreak.candidates.length} atleti hanno lo stesso
+              miglior tempo (
+              <strong>{pendingTieBreak.timeFormatted}</strong>) in{" "}
+              <strong>{STYLES[pendingTieBreak.style]}</strong>, entrambi
+              ottenuto in{" "}
+              <strong>
+                {pendingTieBreak.sourceType === "gara"
+                  ? "gara"
+                  : "allenamento"}
+              </strong>
+              . Quale atleta preferisci inserire in formazione?
+            </p>
+            <div className="athletes-list">
+              {pendingTieBreak.candidates.map((candidate) => (
+                <button
+                  key={candidate.athleteId}
+                  onClick={() => resolveTieBreak(candidate.athleteId)}
+                  className="athlete-option"
+                >
+                  <span>{candidate.athleteName}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       )}
