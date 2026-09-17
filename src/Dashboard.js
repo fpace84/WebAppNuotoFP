@@ -92,7 +92,7 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [recordType, setRecordType] = useState("Propaganda");
+  const [recordType, setRecordType] = useState("");
   const [recordGender, setRecordGender] = useState("all");
   const [selectedRecordCategories, setSelectedRecordCategories] = useState([]);
   const [selectedRecordStyles, setSelectedRecordStyles] = useState([]);
@@ -833,6 +833,7 @@ export default function Dashboard() {
                 setSelectedRecordDistances([]);
               }}
             >
+              <option value="">Seleziona tipologia</option>
               <option value="Propaganda">Propaganda</option>
               <option value="Agonista">Agonistica</option>
               <option value="Master">Master</option>
@@ -877,12 +878,17 @@ export default function Dashboard() {
           />
 
           <div className="records-actions">
-            <button onClick={handlePrintRecords} className="record-action-btn">
+            <button
+              onClick={handlePrintRecords}
+              className="record-action-btn"
+              disabled={recordType === ""}
+            >
               🖨️ Stampa
             </button>
             <button
               onClick={handleSaveRecordsPDF}
               className="record-action-btn pdf"
+              disabled={recordType === ""}
             >
               📄 Salva PDF
             </button>
@@ -890,10 +896,18 @@ export default function Dashboard() {
         </div>
 
         <div className="records-grid">
-          {(recordGender === "all" || recordGender === "male") &&
-            renderRecordsTable(data.stats.records.male, "male")}
-          {(recordGender === "all" || recordGender === "female") &&
-            renderRecordsTable(data.stats.records.female, "female")}
+          {recordType === "" ? (
+            <div className="records-empty-hint">
+              Seleziona una tipologia per visualizzare i record
+            </div>
+          ) : (
+            <>
+              {(recordGender === "all" || recordGender === "male") &&
+                renderRecordsTable(data.stats.records.male, "male")}
+              {(recordGender === "all" || recordGender === "female") &&
+                renderRecordsTable(data.stats.records.female, "female")}
+            </>
+          )}
         </div>
       </section>
     </div>

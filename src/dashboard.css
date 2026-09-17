@@ -194,6 +194,22 @@
   background: #1e40af;
 }
 
+.record-action-btn:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+}
+
+.records-empty-hint {
+  width: 100%;
+  text-align: center;
+  padding: 40px 20px;
+  color: #6b7280;
+  font-size: 15px;
+  background: #f9fafb;
+  border: 1px dashed #d1d5db;
+  border-radius: 8px;
+}
+
 .record-action-btn.pdf {
   background: #dc2626;
 }
