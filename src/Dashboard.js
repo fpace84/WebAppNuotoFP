@@ -1,16 +1,102 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { db } from "./firebase";
 import { collection, getDocs } from "firebase/firestore";
 import { calculateCategory } from "./categories";
 import { formatTime, timeToMilliseconds } from "./FormatTime";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 import "./dashboard.css";
+
+// Menu a tendina riutilizzabile con "Seleziona tutte" + checkbox,
+// con stato di apertura indipendente per ogni istanza.
+function MultiSelectDropdown({ label, options, selected, onChange, emptyHint }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (ref.current && !ref.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const allSelected = options.length > 0 && selected.length === options.length;
+
+  return (
+    <div className="record-filter">
+      <label className="record-filter-label">{label}</label>
+      <div className="category-dropdown" ref={ref}>
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          className={`category-dropdown-toggle ${isOpen ? "open" : ""}`}
+        >
+          <span>
+            {selected.length > 0 ? `${selected.length} selezionate` : emptyHint}
+          </span>
+          <span className="category-dropdown-caret">▾</span>
+        </button>
+
+        {isOpen && (
+          <div className="category-dropdown-panel">
+            <label className="category-dropdown-item select-all">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={() => onChange(allSelected ? [] : [...options])}
+                disabled={options.length === 0}
+              />
+              <span>Seleziona tutte</span>
+            </label>
+            <div className="category-dropdown-list">
+              {options.length === 0 ? (
+                <div className="category-dropdown-empty">
+                  Nessuna opzione disponibile
+                </div>
+              ) : (
+                options.map((opt) => (
+                  <label
+                    key={opt}
+                    className={`category-dropdown-item ${
+                      selected.includes(opt) ? "selected" : ""
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selected.includes(opt)}
+                      onChange={() =>
+                        onChange(
+                          selected.includes(opt)
+                            ? selected.filter((v) => v !== opt)
+                            : [...selected, opt]
+                        )
+                      }
+                    />
+                    <span>{opt}</span>
+                  </label>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [recordType, setRecordType] = useState("Propaganda");
+  const [recordGender, setRecordGender] = useState("all");
+  const [selectedRecordCategories, setSelectedRecordCategories] = useState([]);
+  const [selectedRecordStyles, setSelectedRecordStyles] = useState([]);
+  const [selectedRecordDistances, setSelectedRecordDistances] = useState([]);
   const [userRole, setUserRole] = useState("user");
   const [data, setData] = useState({
     events: [],
@@ -429,10 +515,30 @@ export default function Dashboard() {
     }
   };
 
+  // Applica tutti i filtri selezionati a un elenco di record
+  const applyRecordFilters = (records) =>
+    records.filter((record) => {
+      if (record.recordType !== recordType) return false;
+      if (
+        selectedRecordCategories.length > 0 &&
+        !selectedRecordCategories.includes(record.category)
+      )
+        return false;
+      if (
+        selectedRecordStyles.length > 0 &&
+        !selectedRecordStyles.includes(record.style)
+      )
+        return false;
+      if (
+        selectedRecordDistances.length > 0 &&
+        !selectedRecordDistances.includes(record.distance)
+      )
+        return false;
+      return true;
+    });
+
   const renderRecordsTable = (records, gender) => {
-    const filteredRecords = sortRecordsByOrder(
-      records.filter((record) => record.recordType === recordType)
-    );
+    const filteredRecords = sortRecordsByOrder(applyRecordFilters(records));
 
     if (filteredRecords.length === 0) {
       return (
@@ -496,6 +602,136 @@ export default function Dashboard() {
   if (error) {
     return <div className="text-center py-4 text-red-600">{error}</div>;
   }
+
+  // Opzioni disponibili nei menu a tendina, ricavate dai record della
+  // tipologia attualmente selezionata (così non si mostrano categorie o
+  // distanze che non esistono per quel gruppo).
+  const recordsForType = [
+    ...data.stats.records.male,
+    ...data.stats.records.female,
+  ].filter((r) => r.recordType === recordType);
+
+  const availableCategories = [
+    ...new Set(recordsForType.map((r) => r.category).filter(Boolean)),
+  ].sort();
+  const availableStyles = [
+    ...new Set(recordsForType.map((r) => r.style).filter(Boolean)),
+  ].sort();
+  const availableDistances = [
+    ...new Set(recordsForType.map((r) => r.distance).filter(Boolean)),
+  ].sort((a, b) => parseInt(a) - parseInt(b));
+
+  // Righe effettivamente visibili, rispettando anche il filtro sesso
+  const getVisibleSections = () => {
+    const sections = [];
+    if (recordGender === "all" || recordGender === "male") {
+      sections.push({
+        gender: "male",
+        title: "Record Maschili",
+        rows: sortRecordsByOrder(applyRecordFilters(data.stats.records.male)),
+      });
+    }
+    if (recordGender === "all" || recordGender === "female") {
+      sections.push({
+        gender: "female",
+        title: "Record Femminili",
+        rows: sortRecordsByOrder(applyRecordFilters(data.stats.records.female)),
+      });
+    }
+    return sections;
+  };
+
+  const handlePrintRecords = () => {
+    window.print();
+  };
+
+  const handleSaveRecordsPDF = () => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const marginX = 12;
+
+    doc.setFillColor(37, 99, 235);
+    doc.rect(0, 0, pageWidth, 22, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(16);
+    doc.setFont(undefined, "bold");
+    doc.text(`Record ${recordType}`, marginX, 14);
+    doc.setFont(undefined, "normal");
+
+    doc.setTextColor(60, 60, 60);
+    doc.setFontSize(9);
+    let cursorY = 30;
+
+    const filtersSummary = [
+      recordGender === "all"
+        ? "Maschili e femminili"
+        : recordGender === "male"
+        ? "Solo maschili"
+        : "Solo femminili",
+      selectedRecordCategories.length > 0
+        ? `Categorie: ${selectedRecordCategories.join(", ")}`
+        : "Tutte le categorie",
+      selectedRecordStyles.length > 0
+        ? `Stili: ${selectedRecordStyles.join(", ")}`
+        : "Tutti gli stili",
+      selectedRecordDistances.length > 0
+        ? `Distanze: ${selectedRecordDistances.join(", ")}`
+        : "Tutte le distanze",
+    ].join(" • ");
+
+    const summaryLines = doc.splitTextToSize(
+      filtersSummary,
+      pageWidth - marginX * 2
+    );
+    doc.text(summaryLines, marginX, cursorY);
+    cursorY += summaryLines.length * 4.5 + 4;
+
+    getVisibleSections().forEach((section) => {
+      if (section.rows.length === 0) return;
+
+      doc.setFontSize(12);
+      doc.setFont(undefined, "bold");
+      doc.setTextColor(30, 41, 59);
+      doc.text(section.title, marginX, cursorY);
+      doc.setFont(undefined, "normal");
+      cursorY += 5;
+
+      doc.autoTable({
+        startY: cursorY,
+        head: [["Categoria", "Atleta", "Stile", "Distanza", "Tempo", "Data"]],
+        body: section.rows.map((r) => [
+          r.category || "",
+          r.athleteName || "",
+          r.style || "",
+          r.distance || "",
+          formatTime(r.timeFormatted) || "",
+          formatDate(r.date) || "",
+        ]),
+        styles: {
+          fontSize: 8,
+          cellPadding: 2,
+          lineColor: [225, 229, 235],
+          lineWidth: 0.1,
+          textColor: [55, 65, 81],
+        },
+        headStyles: {
+          fillColor: [30, 64, 175],
+          textColor: 255,
+          fontStyle: "bold",
+          halign: "center",
+        },
+        alternateRowStyles: { fillColor: [243, 246, 251] },
+        theme: "striped",
+        margin: { left: marginX, right: marginX, bottom: 14 },
+      });
+
+      cursorY = doc.lastAutoTable.finalY + 10;
+    });
+
+    doc.save(
+      `Record_${recordType}_${new Date().toISOString().split("T")[0]}.pdf`
+    );
+  };
 
   return (
     <div className="dashboard-container">
@@ -584,7 +820,12 @@ export default function Dashboard() {
           <h2 className="records-title">Record per Categoria</h2>
           <div className="records-buttons-container">
             <button
-              onClick={() => setRecordType("Propaganda")}
+              onClick={() => {
+                setRecordType("Propaganda");
+                setSelectedRecordCategories([]);
+                setSelectedRecordStyles([]);
+                setSelectedRecordDistances([]);
+              }}
               className={`record-type-button-propaganda ${
                 recordType === "Propaganda" ? "active propaganda" : ""
               }`}
@@ -593,7 +834,12 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => setRecordType("Agonista")}
+              onClick={() => {
+                setRecordType("Agonista");
+                setSelectedRecordCategories([]);
+                setSelectedRecordStyles([]);
+                setSelectedRecordDistances([]);
+              }}
               className={`record-type-button-agonista ${
                 recordType === "Agonista" ? "active agonista" : ""
               }`}
@@ -602,7 +848,12 @@ export default function Dashboard() {
             </button>
 
             <button
-              onClick={() => setRecordType("Master")}
+              onClick={() => {
+                setRecordType("Master");
+                setSelectedRecordCategories([]);
+                setSelectedRecordStyles([]);
+                setSelectedRecordDistances([]);
+              }}
               className={`record-type-button-master ${
                 recordType === "Master" ? "active master" : ""
               }`}
@@ -612,9 +863,62 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <div className="records-filters no-print">
+          <div className="record-filter">
+            <label className="record-filter-label">Sesso</label>
+            <select
+              className="record-filter-select"
+              value={recordGender}
+              onChange={(e) => setRecordGender(e.target.value)}
+            >
+              <option value="all">Maschi e femmine</option>
+              <option value="male">Solo maschi</option>
+              <option value="female">Solo femmine</option>
+            </select>
+          </div>
+
+          <MultiSelectDropdown
+            label="Categoria"
+            options={availableCategories}
+            selected={selectedRecordCategories}
+            onChange={setSelectedRecordCategories}
+            emptyHint="Tutte le categorie"
+          />
+
+          <MultiSelectDropdown
+            label="Stile"
+            options={availableStyles}
+            selected={selectedRecordStyles}
+            onChange={setSelectedRecordStyles}
+            emptyHint="Tutti gli stili"
+          />
+
+          <MultiSelectDropdown
+            label="Distanza"
+            options={availableDistances}
+            selected={selectedRecordDistances}
+            onChange={setSelectedRecordDistances}
+            emptyHint="Tutte le distanze"
+          />
+
+          <div className="records-actions">
+            <button onClick={handlePrintRecords} className="record-action-btn">
+              🖨️ Stampa
+            </button>
+            <button
+              onClick={handleSaveRecordsPDF}
+              className="record-action-btn pdf"
+            >
+              📄 Salva PDF
+            </button>
+          </div>
+        </div>
+
         <div className="records-grid">
-          {renderRecordsTable(data.stats.records.male, "male")}
-          {renderRecordsTable(data.stats.records.female, "female")}
+          {(recordGender === "all" || recordGender === "male") &&
+            renderRecordsTable(data.stats.records.male, "male")}
+          {(recordGender === "all" || recordGender === "female") &&
+            renderRecordsTable(data.stats.records.female, "female")}
         </div>
       </section>
     </div>
