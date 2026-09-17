@@ -818,52 +818,27 @@ export default function Dashboard() {
       <section className="records-section">
         <div className="records-header">
           <h2 className="records-title">Record per Categoria</h2>
-          <div className="records-buttons-container">
-            <button
-              onClick={() => {
-                setRecordType("Propaganda");
-                setSelectedRecordCategories([]);
-                setSelectedRecordStyles([]);
-                setSelectedRecordDistances([]);
-              }}
-              className={`record-type-button-propaganda ${
-                recordType === "Propaganda" ? "active propaganda" : ""
-              }`}
-            >
-              Record Propaganda
-            </button>
-
-            <button
-              onClick={() => {
-                setRecordType("Agonista");
-                setSelectedRecordCategories([]);
-                setSelectedRecordStyles([]);
-                setSelectedRecordDistances([]);
-              }}
-              className={`record-type-button-agonista ${
-                recordType === "Agonista" ? "active agonista" : ""
-              }`}
-            >
-              Record Agonistica
-            </button>
-
-            <button
-              onClick={() => {
-                setRecordType("Master");
-                setSelectedRecordCategories([]);
-                setSelectedRecordStyles([]);
-                setSelectedRecordDistances([]);
-              }}
-              className={`record-type-button-master ${
-                recordType === "Master" ? "active master" : ""
-              }`}
-            >
-              Record Master
-            </button>
-          </div>
         </div>
 
         <div className="records-filters no-print">
+          <div className="record-filter">
+            <label className="record-filter-label">Tipologia</label>
+            <select
+              className="record-filter-select"
+              value={recordType}
+              onChange={(e) => {
+                setRecordType(e.target.value);
+                setSelectedRecordCategories([]);
+                setSelectedRecordStyles([]);
+                setSelectedRecordDistances([]);
+              }}
+            >
+              <option value="Propaganda">Propaganda</option>
+              <option value="Agonista">Agonistica</option>
+              <option value="Master">Master</option>
+            </select>
+          </div>
+
           <div className="record-filter">
             <label className="record-filter-label">Sesso</label>
             <select

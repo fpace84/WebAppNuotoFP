@@ -226,8 +226,10 @@
 }
 
 .category-dropdown-list {
-  max-height: 40vh;
+  max-height: 60vh;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 
 .category-dropdown-list .category-dropdown-item:last-child {
@@ -242,13 +244,15 @@
 }
 
 /* Card */
+/* Nota: niente overflow:hidden qui, altrimenti il pannello del menu a
+   tendina categorie viene ritagliato ai bordi della scheda e non si
+   riescono a vedere/scorrere tutte le categorie. */
 .card {
   background: white;
   border-radius: 0.5rem;
 
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 1rem;
-  overflow: hidden;
 }
 
 .card-header {
