@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, getDocs } from "firebase/firestore";
 import { calculateCategory } from "./categories";
+import { timeToMilliseconds } from "./FormatTime";
 import "./competitionResults.css";
 
 export default function CompetitionResults() {
@@ -15,6 +16,15 @@ export default function CompetitionResults() {
   const [races, setRaces] = useState([]);
   const [selectedRace, setSelectedRace] = useState("");
   const [attendanceRecords, setAttendanceRecords] = useState([]);
+  const [personalBests, setPersonalBests] = useState({});
+
+  // Restituisce il miglior tempo personale (gia formattato) per un atleta
+  // in una data specialita+distanza, o null se non ne ha ancora uno.
+  const getPersonalBest = (athleteId, style, distance) => {
+    if (!style || !distance) return null;
+    const best = personalBests[athleteId]?.[`${style}_${distance}`];
+    return best ? best.timeFormatted : null;
+  };
   const [existingResults, setExistingResults] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -32,11 +42,13 @@ export default function CompetitionResults() {
           racesSnapshot,
           competitionsSnapshot,
           attendanceSnapshot,
+          trainingSnapshot,
         ] = await Promise.all([
           getDocs(collection(db, "athletes")),
           getDocs(collection(db, "races")),
           getDocs(collection(db, "competitions")),
           getDocs(collection(db, "attendance")),
+          getDocs(collection(db, "trainingTimes")),
         ]);
 
         // Carica e ordina atleti
@@ -90,6 +102,27 @@ export default function CompetitionResults() {
         setAttendanceRecords(
           attendanceSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
         );
+
+        // Calcola il miglior tempo personale di ogni atleta per ogni
+        // specialità (stile+distanza), considerando sia le gare che gli
+        // allenamenti, cosi da poterlo mostrare come riferimento.
+        const bests = {};
+        const considerRecord = (record) => {
+          if (!record.athleteId || !record.style || !record.distance) return;
+          const key = `${record.style}_${record.distance}`;
+          const ms = timeToMilliseconds(record.timeFormatted);
+          if (!bests[record.athleteId]) bests[record.athleteId] = {};
+          const current = bests[record.athleteId][key];
+          if (!current || ms < current.ms) {
+            bests[record.athleteId][key] = {
+              ms,
+              timeFormatted: record.timeFormatted,
+            };
+          }
+        };
+        competitionsSnapshot.docs.forEach((doc) => considerRecord(doc.data()));
+        trainingSnapshot.docs.forEach((doc) => considerRecord(doc.data()));
+        setPersonalBests(bests);
       } catch (error) {
         console.error("Errore nel caricamento dei dati:", error);
         setError("Errore nel caricamento dei dati");
@@ -729,6 +762,33 @@ export default function CompetitionResults() {
                             </option>
                           ))}
                         </select>
+                        {entry.style && entry.distance && (
+                          <div
+                            style={{
+                              fontSize: "12px",
+                              marginTop: "4px",
+                              color: getPersonalBest(
+                                athlete.id,
+                                entry.style,
+                                entry.distance
+                              )
+                                ? "#059669"
+                                : "#999",
+                            }}
+                          >
+                            {getPersonalBest(
+                              athlete.id,
+                              entry.style,
+                              entry.distance
+                            )
+                              ? `🏆 Personale: ${getPersonalBest(
+                                  athlete.id,
+                                  entry.style,
+                                  entry.distance
+                                )}`
+                              : "Nessun tempo precedente"}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <input

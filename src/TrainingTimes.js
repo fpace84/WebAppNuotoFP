@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { calculateCategory } from "./categories";
+import { timeToMilliseconds } from "./FormatTime";
 
 export default function TrainingTimes() {
   // Funzione per ottenere la data di oggi nel formato corretto
@@ -18,6 +19,7 @@ export default function TrainingTimes() {
   const [loading, setLoading] = useState(true);
 
   const [athletes, setAthletes] = useState([]);
+  const [personalBests, setPersonalBests] = useState({});
   const [selectedType, setSelectedType] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
@@ -76,7 +78,50 @@ export default function TrainingTimes() {
       }
     };
     fetchAthletes();
+
+    // Carica il miglior tempo personale di ogni atleta per ogni
+    // combinazione stile+distanza, considerando sia gli allenamenti che le
+    // gare, cosi da poterlo mostrare come riferimento durante l'inserimento.
+    const fetchPersonalBests = async () => {
+      try {
+        const [trainingSnapshot, racesSnapshot] = await Promise.all([
+          getDocs(collection(db, "trainingTimes")),
+          getDocs(collection(db, "competitions")),
+        ]);
+
+        const bests = {};
+        const considerRecord = (record) => {
+          if (!record.athleteId || !record.style || !record.distance) return;
+          const key = `${record.style}_${record.distance}`;
+          const ms = timeToMilliseconds(record.timeFormatted);
+          if (!bests[record.athleteId]) bests[record.athleteId] = {};
+          const current = bests[record.athleteId][key];
+          if (!current || ms < current.ms) {
+            bests[record.athleteId][key] = {
+              ms,
+              timeFormatted: record.timeFormatted,
+            };
+          }
+        };
+
+        trainingSnapshot.docs.forEach((doc) => considerRecord(doc.data()));
+        racesSnapshot.docs.forEach((doc) => considerRecord(doc.data()));
+
+        setPersonalBests(bests);
+      } catch (error) {
+        console.error("Errore nel caricamento dei migliori tempi:", error);
+      }
+    };
+    fetchPersonalBests();
   }, []);
+
+  // Restituisce il miglior tempo personale (gia formattato) per un atleta
+  // in una data specialita+distanza, o null se non ne ha ancora uno.
+  const getPersonalBest = (athleteId, style, distance) => {
+    if (!style || !distance) return null;
+    const best = personalBests[athleteId]?.[`${style}_${distance}`];
+    return best ? best.timeFormatted : null;
+  };
 
   useEffect(() => {
     const fetchPresentAthletes = async () => {
@@ -1114,6 +1159,30 @@ export default function TrainingTimes() {
                     </select>
                   </div>
 
+                  {time.style && time.distance && (
+                    <div
+                      style={{
+                        marginBottom: "12px",
+                        fontSize: "13px",
+                        color: getPersonalBest(
+                          athlete.id,
+                          time.style,
+                          time.distance
+                        )
+                          ? "#059669"
+                          : "#999",
+                      }}
+                    >
+                      {getPersonalBest(athlete.id, time.style, time.distance)
+                        ? `🏆 Personale: ${getPersonalBest(
+                            athlete.id,
+                            time.style,
+                            time.distance
+                          )}`
+                        : "Nessun tempo precedente per questa specialità"}
+                    </div>
+                  )}
+
                   <div
                     style={{
                       display: "flex",
@@ -1444,6 +1513,14 @@ export default function TrainingTimes() {
                     }}
                   >
                     Corsia {index + 1}: {athlete.lastName} {athlete.name}
+                    {getPersonalBest(athlete.id, groupStyle, groupDistance) && (
+                      <span style={{ color: "#059669", fontWeight: "normal" }}>
+                        {" "}
+                        (Personale:{" "}
+                        {getPersonalBest(athlete.id, groupStyle, groupDistance)}
+                        )
+                      </span>
+                    )}
                   </div>
 
                   <div style={{ display: "flex", gap: "8px" }}>
