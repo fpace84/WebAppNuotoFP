@@ -680,139 +680,190 @@ export default function AttendanceManagement() {
         </div>
       </div>
 
-      {/* Tabella Presenze */}
-      <div className="card">
-        <div className="card-body">
-          <div className="table-container">
-            <table className="table">
-              <thead className="table-header">
-                <tr>
-                  <th style={{ width: "50px", textAlign: "center" }}>
-                    <input
-                      type="checkbox"
-                      checked={
-                        filteredAthletes.length > 0 &&
-                        selectedAthletes.size === filteredAthletes.length
-                      }
-                      onChange={handleSelectAll}
-                      style={{
-                        width: "20px",
-                        height: "20px",
-                        cursor: "pointer",
-                        accentColor: "#3b82f6",
-                        transform: "scale(1.5)",
-                      }}
-                    />
-                  </th>
-                  <th>Atleta</th>
-                  <th>Stato</th>
-                  <th>Note</th>
-                  <th>Azioni</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredAthletes.map((athlete) => (
-                  <tr key={athlete.id} className="table-row">
-                    <td className="table-cell" style={{ textAlign: "center" }}>
-                      <input
-                        type="checkbox"
-                        checked={selectedAthletes.has(athlete.id)}
-                        onChange={() => handleSelectAthlete(athlete.id)}
-                        style={{
-                          width: "20px",
-                          height: "20px",
-                          cursor: "pointer",
-                          accentColor: "#3b82f6",
-                          transform: "scale(1.5)",
-                        }}
-                      />
-                    </td>
-                    <td className="table-cell">
-                      {athlete.lastName} {athlete.name}
-                    </td>
-                    <td className="table-cell">
-                      <select
-                        value={attendances[athlete.id]?.present || ""}
-                        onChange={(e) =>
-                          handleAttendanceChange(
-                            athlete.id,
-                            "present",
-                            e.target.value
-                          )
-                        }
-                        className="form-select"
-                        disabled={
-                          existingAttendances[athlete.id] &&
-                          !editMode[athlete.id]
-                        }
-                      >
-                        <option value="">Seleziona</option>
-                        {presenceOptions.map((option) => (
-                          <option key={option} value={option}>
-                            {option}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-                    <td className="table-cell">
-                      <input
-                        type="text"
-                        value={attendances[athlete.id]?.notes || ""}
-                        onChange={(e) =>
-                          handleAttendanceChange(
-                            athlete.id,
-                            "notes",
-                            e.target.value
-                          )
-                        }
-                        className="form-input"
-                        placeholder="Note"
-                        disabled={
-                          existingAttendances[athlete.id] &&
-                          !editMode[athlete.id]
-                        }
-                      />
-                    </td>
-                    <td className="table-cell">
-                      {existingAttendances[athlete.id] ? (
-                        editMode[athlete.id] ? (
-                          <>
-                            <button
-                              onClick={() => handleSaveRow(athlete.id)}
-                              className="btn btn-success"
-                            >
-                              Salva
-                            </button>
-                            <button
-                              onClick={() => handleDelete(athlete.id)}
-                              className="btn btn-danger"
-                            >
-                              Elimina
-                            </button>
-                          </>
-                        ) : (
-                          <button
-                            onClick={() => handleEnableEdit(athlete.id)}
-                            className="btn btn-primary"
-                          >
-                            Modifica
-                          </button>
-                        )
-                      ) : (
-                        <button
-                          onClick={() => handleSaveRow(athlete.id)}
-                          className="btn btn-success"
-                        >
-                          Salva
-                        </button>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      {/* Elenco Presenze - schede a scorrimento a scatto, un atleta alla volta */}
+      {filteredAthletes.length > 0 && (
+        <label
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            marginBottom: "10px",
+            fontSize: "14px",
+            fontWeight: "600",
+            cursor: "pointer",
+          }}
+        >
+          <input
+            type="checkbox"
+            checked={
+              filteredAthletes.length > 0 &&
+              selectedAthletes.size === filteredAthletes.length
+            }
+            onChange={handleSelectAll}
+            style={{
+              width: "20px",
+              height: "20px",
+              cursor: "pointer",
+              accentColor: "#3b82f6",
+              transform: "scale(1.5)",
+            }}
+          />
+          Seleziona tutti
+        </label>
+      )}
+      <div
+        style={{
+          height: "70vh",
+          overflowY: "auto",
+          scrollSnapType: "y mandatory",
+          borderRadius: "12px",
+          WebkitOverflowScrolling: "touch",
+          marginBottom: "16px",
+        }}
+      >
+        {filteredAthletes.length === 0 ? (
+          <div className="card">
+            <div className="card-body text-center py-4">
+              Nessun atleta trovato con i filtri selezionati
+            </div>
           </div>
-        </div>
+        ) : (
+          filteredAthletes.map((athlete) => (
+            <div
+              key={athlete.id}
+              style={{
+                height: "100%",
+                scrollSnapAlign: "start",
+                scrollSnapStop: "always",
+                overflowY: "auto",
+                boxSizing: "border-box",
+                padding: "16px",
+                backgroundColor: "#f8f9fa",
+                borderRadius: "12px",
+                marginBottom: "12px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "10px",
+                  marginBottom: "16px",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedAthletes.has(athlete.id)}
+                  onChange={() => handleSelectAthlete(athlete.id)}
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    cursor: "pointer",
+                    accentColor: "#3b82f6",
+                    transform: "scale(1.5)",
+                  }}
+                />
+                <div style={{ fontWeight: "600", fontSize: "16px" }}>
+                  {athlete.lastName} {athlete.name}
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "12px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    marginBottom: "4px",
+                    color: "#666",
+                  }}
+                >
+                  Stato
+                </label>
+                <select
+                  value={attendances[athlete.id]?.present || ""}
+                  onChange={(e) =>
+                    handleAttendanceChange(
+                      athlete.id,
+                      "present",
+                      e.target.value
+                    )
+                  }
+                  className="form-select"
+                  disabled={
+                    existingAttendances[athlete.id] && !editMode[athlete.id]
+                  }
+                >
+                  <option value="">Seleziona</option>
+                  {presenceOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label
+                  style={{
+                    display: "block",
+                    fontSize: "13px",
+                    marginBottom: "4px",
+                    color: "#666",
+                  }}
+                >
+                  Note
+                </label>
+                <input
+                  type="text"
+                  value={attendances[athlete.id]?.notes || ""}
+                  onChange={(e) =>
+                    handleAttendanceChange(athlete.id, "notes", e.target.value)
+                  }
+                  className="form-input"
+                  placeholder="Note"
+                  disabled={
+                    existingAttendances[athlete.id] && !editMode[athlete.id]
+                  }
+                />
+              </div>
+
+              <div style={{ display: "flex", gap: "8px" }}>
+                {existingAttendances[athlete.id] ? (
+                  editMode[athlete.id] ? (
+                    <>
+                      <button
+                        onClick={() => handleSaveRow(athlete.id)}
+                        className="btn btn-success"
+                      >
+                        Salva
+                      </button>
+                      <button
+                        onClick={() => handleDelete(athlete.id)}
+                        className="btn btn-danger"
+                      >
+                        Elimina
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      onClick={() => handleEnableEdit(athlete.id)}
+                      className="btn btn-primary"
+                    >
+                      Modifica
+                    </button>
+                  )
+                ) : (
+                  <button
+                    onClick={() => handleSaveRow(athlete.id)}
+                    className="btn btn-success"
+                  >
+                    Salva
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        )}
       </div>
 
       {/* Pannello azioni rapide, fisso in basso mentre si scorre la lista atleti */}
