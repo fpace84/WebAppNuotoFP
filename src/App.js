@@ -9,6 +9,8 @@ import {
 import { UserCircle } from "lucide-react";
 import Login from "./Login";
 import Dashboard from "./Dashboard";
+import Statistics from "./Statistics";
+import Records from "./Records";
 import AthleteList from "./AthleteList";
 import AthleteDetails from "./AthleteDetails";
 import NewAthlete from "./NewAthlete";
@@ -241,6 +243,22 @@ function App() {
                 element={
                   <PrivateRoute requiredRoles={["admin", "coach"]}>
                     <Reports />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/statistics"
+                element={
+                  <PrivateRoute requiredRoles={["admin", "coach", "user"]}>
+                    <Statistics />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/records"
+                element={
+                  <PrivateRoute requiredRoles={["admin", "coach", "user"]}>
+                    <Records />
                   </PrivateRoute>
                 }
               />

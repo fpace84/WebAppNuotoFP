@@ -1,0 +1,39 @@
+.stats-muted {
+  color: #9ca3af;
+  font-size: 13px;
+  margin-top: 6px;
+}
+
+.stats-table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stats-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stats-table th,
+.stats-table td {
+  padding: 10px 14px;
+  text-align: left;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+}
+
+.stats-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  color: #374151;
+}
+
+.stats-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.stats-table tbody tr:hover {
+  background: #f9fafb;
+}
