@@ -42,9 +42,9 @@ export default function TrainingTimes() {
 
   const [groupStyle, setGroupStyle] = useState("");
   const [groupDistance, setGroupDistance] = useState("");
-  const [athletesPerHeat, setAthletesPerHeat] = useState(6);
-  const [genderSeparation, setGenderSeparation] = useState("mixed");
-  const [sortOrder, setSortOrder] = useState("fastest");
+  const [athletesPerHeat, setAthletesPerHeat] = useState("");
+  const [genderSeparation, setGenderSeparation] = useState("");
+  const [sortOrder, setSortOrder] = useState("");
   const [heats, setHeats] = useState([]);
   const [heatsGenerated, setHeatsGenerated] = useState(false);
   const [heatTimes, setHeatTimes] = useState({});
@@ -286,6 +286,12 @@ export default function TrainingTimes() {
   const generateHeats = async () => {
     if (!groupStyle || !groupDistance) {
       alert("Seleziona stile e distanza prima di generare le batterie");
+      return;
+    }
+    if (!athletesPerHeat || !genderSeparation || !sortOrder) {
+      alert(
+        "Seleziona numero atleti per batteria, divisione per sesso e ordinamento prima di generare le batterie"
+      );
       return;
     }
 
@@ -910,7 +916,11 @@ export default function TrainingTimes() {
               </label>
               <select
                 value={athletesPerHeat}
-                onChange={(e) => setAthletesPerHeat(Number(e.target.value))}
+                onChange={(e) =>
+                  setAthletesPerHeat(
+                    e.target.value === "" ? "" : Number(e.target.value)
+                  )
+                }
                 style={{
                   width: "100%",
                   padding: "14px",
@@ -919,6 +929,7 @@ export default function TrainingTimes() {
                   borderRadius: "8px",
                 }}
               >
+                <option value="">Seleziona numero atleti</option>
                 <option value={2}>2 atleti</option>
                 <option value={3}>3 atleti</option>
                 <option value={4}>4 atleti</option>
@@ -953,6 +964,7 @@ export default function TrainingTimes() {
                   borderRadius: "8px",
                 }}
               >
+                <option value="">Seleziona</option>
                 <option value="mixed">Batterie miste</option>
                 <option value="separated">Batterie separate M/F</option>
               </select>
@@ -980,6 +992,7 @@ export default function TrainingTimes() {
                   borderRadius: "8px",
                 }}
               >
+                <option value="">Seleziona</option>
                 <option value="fastest">Dal più veloce al più lento</option>
                 <option value="slowest">Dal più lento al più veloce</option>
               </select>

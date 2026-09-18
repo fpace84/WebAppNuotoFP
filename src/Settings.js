@@ -23,7 +23,7 @@ export default function Settings() {
     email: "",
     password: "",
     name: "",
-    role: "coach",
+    role: "",
     childName: "",
     childLastName: "",
   });
@@ -100,7 +100,7 @@ export default function Settings() {
           email: "",
           password: "",
           name: "",
-          role: "coach",
+          role: "",
           childName: "",
           childLastName: "",
         });
@@ -334,6 +334,7 @@ export default function Settings() {
                   setNewUser({ ...newUser, role: e.target.value })
                 }
               >
+                <option value="">Seleziona ruolo</option>
                 <option value="admin">Amministratore</option>
                 <option value="coach">Allenatore</option>
                 <option value="user">Genitore</option>
