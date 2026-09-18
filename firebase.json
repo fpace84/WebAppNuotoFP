@@ -1,5 +1,6 @@
 {
   "hosting": {
+    "site": "webapp-nuoto",
     "public": "build",
     "ignore": [
       "firebase.json",
