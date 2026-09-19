@@ -749,6 +749,12 @@ export default function AttendanceManagement() {
                   alignItems: "center",
                   gap: "10px",
                   marginBottom: "16px",
+                  position: "sticky",
+                  top: 0,
+                  backgroundColor: "#f8f9fa",
+                  zIndex: 1,
+                  paddingTop: "4px",
+                  paddingBottom: "4px",
                 }}
               >
                 <input
