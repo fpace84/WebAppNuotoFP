@@ -1059,7 +1059,11 @@ export default function TrainingTimes() {
         <div>
           <div
             style={{
-              scrollSnapType: "y proximity",
+              maxHeight: "calc(100vh - 260px)",
+              overflowY: "auto",
+              scrollSnapType: "y mandatory",
+              WebkitOverflowScrolling: "touch",
+              borderRadius: "12px",
             }}
           >
             {individualEntries.map((athlete) => (
@@ -1069,11 +1073,12 @@ export default function TrainingTimes() {
                   individualEntries.length > 3 ? "compact-card" : ""
                 }
                 style={{
-                  minHeight: "min(60vh, 420px)",
+                  minHeight: "min(55vh, 380px)",
                   display: "flex",
                   flexDirection: "column",
                   justifyContent: "center",
                   scrollSnapAlign: "start",
+                  scrollSnapStop: "always",
                   boxSizing: "border-box",
                   padding: "16px",
                   backgroundColor: "#f8f9fa",
@@ -1477,7 +1482,11 @@ export default function TrainingTimes() {
 
           <div
             style={{
-              scrollSnapType: "y proximity",
+              maxHeight: "calc(100vh - 260px)",
+              overflowY: "auto",
+              scrollSnapType: "y mandatory",
+              WebkitOverflowScrolling: "touch",
+              borderRadius: "12px",
             }}
           >
           {heats.map((heat) => (
@@ -1485,11 +1494,12 @@ export default function TrainingTimes() {
               key={heat.heatNumber}
               className={heats.length > 3 ? "compact-card" : ""}
               style={{
-                minHeight: "min(60vh, 420px)",
+                minHeight: "min(55vh, 380px)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
                 scrollSnapAlign: "start",
+                scrollSnapStop: "always",
                 boxSizing: "border-box",
                 marginBottom: "24px",
                 padding: "16px",

@@ -713,7 +713,11 @@ export default function AttendanceManagement() {
       )}
       <div
         style={{
-          scrollSnapType: "y proximity",
+          maxHeight: "calc(100vh - 260px)",
+          overflowY: "auto",
+          scrollSnapType: "y mandatory",
+          WebkitOverflowScrolling: "touch",
+          borderRadius: "12px",
           marginBottom: "16px",
         }}
       >
@@ -728,11 +732,12 @@ export default function AttendanceManagement() {
             <div
               key={athlete.id}
               style={{
-                minHeight: "min(60vh, 420px)",
+                minHeight: "min(55vh, 380px)",
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "center",
                 scrollSnapAlign: "start",
+                scrollSnapStop: "always",
                 boxSizing: "border-box",
                 padding: "16px",
                 backgroundColor: "#f8f9fa",
