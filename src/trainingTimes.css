@@ -151,3 +151,40 @@ button.danger {
     text-align: center;
   }
 }
+
+/* Schede compatte: quando ci sono più di 3 atleti/batterie, riduce
+   dimensioni e spaziature cosi da vedere più nominativi insieme, invece
+   di uno schermo intero per ciascuno. Usa !important perché gli stili
+   di base delle schede sono inline. */
+.compact-card {
+  min-height: auto !important;
+  padding: 10px !important;
+  margin-bottom: 8px !important;
+}
+
+.compact-card .compact-title {
+  font-size: 14px !important;
+  margin-bottom: 8px !important;
+}
+
+.compact-card label {
+  font-size: 11px !important;
+  margin-bottom: 2px !important;
+}
+
+.compact-card select,
+.compact-card input[type="text"],
+.compact-card input[type="number"] {
+  padding: 6px !important;
+  font-size: 13px !important;
+}
+
+.compact-card > div {
+  margin-bottom: 8px !important;
+}
+
+.compact-card button {
+  padding: 6px 10px !important;
+  font-size: 12px !important;
+}
+

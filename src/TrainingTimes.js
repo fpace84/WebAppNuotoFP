@@ -3,6 +3,7 @@ import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { calculateCategory } from "./categories";
 import { timeToMilliseconds } from "./FormatTime";
+import "./trainingTimes.css";
 
 export default function TrainingTimes() {
   // Funzione per ottenere la data di oggi nel formato corretto
@@ -1058,21 +1059,21 @@ export default function TrainingTimes() {
         <div>
           <div
             style={{
-              height: "70vh",
-              overflowY: "auto",
-              scrollSnapType: "y mandatory",
-              borderRadius: "12px",
-              WebkitOverflowScrolling: "touch",
+              scrollSnapType: "y proximity",
             }}
           >
             {individualEntries.map((athlete) => (
               <div
                 key={athlete.id}
+                className={
+                  individualEntries.length > 3 ? "compact-card" : ""
+                }
                 style={{
-                  height: "100%",
+                  minHeight: "min(60vh, 420px)",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
                   scrollSnapAlign: "start",
-                  scrollSnapStop: "always",
-                  overflowY: "auto",
                   boxSizing: "border-box",
                   padding: "16px",
                   backgroundColor: "#f8f9fa",
@@ -1088,7 +1089,10 @@ export default function TrainingTimes() {
                   marginBottom: "16px",
                 }}
               >
-                <div style={{ fontWeight: "600", fontSize: "16px" }}>
+                <div
+                  className="compact-title"
+                  style={{ fontWeight: "600", fontSize: "16px" }}
+                >
                   {athlete.lastName} {athlete.name}
                 </div>
                 <button
@@ -1473,21 +1477,19 @@ export default function TrainingTimes() {
 
           <div
             style={{
-              height: "70vh",
-              overflowY: "auto",
-              scrollSnapType: "y mandatory",
-              borderRadius: "12px",
-              WebkitOverflowScrolling: "touch",
+              scrollSnapType: "y proximity",
             }}
           >
           {heats.map((heat) => (
             <div
               key={heat.heatNumber}
+              className={heats.length > 3 ? "compact-card" : ""}
               style={{
-                height: "100%",
+                minHeight: "min(60vh, 420px)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
                 scrollSnapAlign: "start",
-                scrollSnapStop: "always",
-                overflowY: "auto",
                 boxSizing: "border-box",
                 marginBottom: "24px",
                 padding: "16px",
@@ -1496,6 +1498,7 @@ export default function TrainingTimes() {
               }}
             >
               <div
+                className="compact-title"
                 style={{
                   fontWeight: "700",
                   fontSize: "18px",

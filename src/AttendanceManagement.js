@@ -713,11 +713,7 @@ export default function AttendanceManagement() {
       )}
       <div
         style={{
-          height: "70vh",
-          overflowY: "auto",
-          scrollSnapType: "y mandatory",
-          borderRadius: "12px",
-          WebkitOverflowScrolling: "touch",
+          scrollSnapType: "y proximity",
           marginBottom: "16px",
         }}
       >
@@ -732,10 +728,11 @@ export default function AttendanceManagement() {
             <div
               key={athlete.id}
               style={{
-                height: "100%",
+                minHeight: "min(60vh, 420px)",
+                display: "flex",
+                flexDirection: "column",
+                justifyContent: "center",
                 scrollSnapAlign: "start",
-                scrollSnapStop: "always",
-                overflowY: "auto",
                 boxSizing: "border-box",
                 padding: "16px",
                 backgroundColor: "#f8f9fa",
@@ -749,12 +746,6 @@ export default function AttendanceManagement() {
                   alignItems: "center",
                   gap: "10px",
                   marginBottom: "16px",
-                  position: "sticky",
-                  top: 0,
-                  backgroundColor: "#f8f9fa",
-                  zIndex: 1,
-                  paddingTop: "4px",
-                  paddingBottom: "4px",
                 }}
               >
                 <input
