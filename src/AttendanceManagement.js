@@ -37,8 +37,8 @@ export default function AttendanceManagement() {
   const [attendances, setAttendances] = useState({});
   const [existingAttendances, setExistingAttendances] = useState({});
   const [editMode, setEditMode] = useState({});
+  const cardRefs = useRef({});
   const [presenceFilter, setPresenceFilter] = useState("all");
-  const [selectedAthletes, setSelectedAthletes] = useState(new Set());
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef(null);
 
@@ -177,25 +177,38 @@ export default function AttendanceManagement() {
     }
   };
 
-  const handleAttendanceChange = (athleteId, field, value) => {
-    if (!editMode[athleteId] && existingAttendances[athleteId]) {
-      return;
-    }
-
-    setAttendances((prev) => ({
-      ...prev,
-      [athleteId]: {
-        ...prev[athleteId],
-        [field]: value,
-      },
-    }));
-  };
-
   const handleEnableEdit = (athleteId) => {
     setEditMode((prev) => ({
       ...prev,
       [athleteId]: true,
     }));
+  };
+
+  // Imposta lo stato di un atleta con un tasto rapido e scorre
+  // automaticamente alla scheda dell'atleta successivo.
+  const setStatusAndAdvance = (athleteId, status) => {
+    setAttendances((prev) => ({
+      ...prev,
+      [athleteId]: {
+        ...prev[athleteId],
+        present: status,
+      },
+    }));
+    setEditMode((prev) => ({
+      ...prev,
+      [athleteId]: false,
+    }));
+
+    const currentIndex = filteredAthletes.findIndex(
+      (a) => a.id === athleteId
+    );
+    const nextAthlete = filteredAthletes[currentIndex + 1];
+    if (nextAthlete && cardRefs.current[nextAthlete.id]) {
+      cardRefs.current[nextAthlete.id].scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
   };
 
   const handleDelete = async (athleteId) => {
@@ -228,106 +241,6 @@ export default function AttendanceManagement() {
         console.error("Errore durante l'eliminazione:", error);
         alert("Errore durante l'eliminazione della presenza");
       }
-    }
-  };
-
-  const handleSaveRow = async (athleteId) => {
-    try {
-      const attendance = attendances[athleteId];
-      if (!attendance?.present) {
-        alert("Seleziona uno stato di presenza");
-        return;
-      }
-
-      const athlete = athletes.find((a) => a.id === athleteId);
-      if (!athlete) return;
-
-      let eventDate = new Date(date);
-      if (eventType === "gara" && selectedRace) {
-        const selectedRaceData = races.find(
-          (race) => race.name === selectedRace
-        );
-        if (selectedRaceData) {
-          eventDate = new Date(selectedRaceData.date);
-        }
-      }
-
-      if (existingAttendances[athleteId]) {
-        await updateDoc(
-          doc(db, "attendance", existingAttendances[athleteId].id),
-          {
-            present: attendance.present,
-            notes: attendance.notes || "",
-            date: eventDate,
-          }
-        );
-
-        setExistingAttendances((prev) => ({
-          ...prev,
-          [athleteId]: {
-            ...prev[athleteId],
-            present: attendance.present,
-            notes: attendance.notes || "",
-            date: eventDate,
-          },
-        }));
-
-        setAttendances((prev) => ({
-          ...prev,
-          [athleteId]: {
-            present: attendance.present,
-            notes: attendance.notes || "",
-          },
-        }));
-      } else {
-        const newAttendanceRef = await addDoc(collection(db, "attendance"), {
-          athleteId,
-          athleteName: `${athlete.name} ${athlete.lastName}`,
-          category: calculateCategory(
-            athlete.birthYear,
-            athlete.type,
-            athlete.gender
-          ),
-          type: eventType,
-          date: eventDate,
-          present: attendance.present,
-          notes: attendance.notes || "",
-          createdAt: new Date(),
-          eventName: eventType === "gara" ? selectedRace : null,
-        });
-
-        const newAttendance = {
-          id: newAttendanceRef.id,
-          athleteId,
-          present: attendance.present,
-          notes: attendance.notes || "",
-          type: eventType,
-          date: eventDate,
-        };
-
-        setExistingAttendances((prev) => ({
-          ...prev,
-          [athleteId]: newAttendance,
-        }));
-
-        setAttendances((prev) => ({
-          ...prev,
-          [athleteId]: {
-            present: attendance.present,
-            notes: attendance.notes || "",
-          },
-        }));
-      }
-
-      setEditMode((prev) => ({
-        ...prev,
-        [athleteId]: false,
-      }));
-
-      alert("Presenza salvata con successo!");
-    } catch (error) {
-      console.error("Errore durante il salvataggio:", error);
-      alert("Errore durante il salvataggio della presenza");
     }
   };
 
@@ -429,46 +342,6 @@ export default function AttendanceManagement() {
     }
   };
 
-  // Nuove funzioni per la selezione
-  const handleSelectAthlete = (athleteId) => {
-    setSelectedAthletes((prev) => {
-      const newSet = new Set(prev);
-      if (newSet.has(athleteId)) {
-        newSet.delete(athleteId);
-      } else {
-        newSet.add(athleteId);
-      }
-      return newSet;
-    });
-  };
-
-  const handleSelectAll = () => {
-    if (selectedAthletes.size === filteredAthletes.length) {
-      setSelectedAthletes(new Set());
-    } else {
-      setSelectedAthletes(new Set(filteredAthletes.map((a) => a.id)));
-    }
-  };
-
-  const applyStatusToSelected = (status) => {
-    if (selectedAthletes.size === 0) {
-      alert("Seleziona almeno un atleta");
-      return;
-    }
-
-    const newAttendances = { ...attendances };
-    selectedAthletes.forEach((athleteId) => {
-      if (!existingAttendances[athleteId] || editMode[athleteId]) {
-        newAttendances[athleteId] = {
-          ...newAttendances[athleteId],
-          present: status,
-        };
-      }
-    });
-    setAttendances(newAttendances);
-    setSelectedAthletes(new Set()); // Deseleziona tutti dopo l'applicazione
-  };
-
   if (loading) return <div className="text-center py-4">Caricamento...</div>;
   if (error)
     return <div className="text-center py-4 text-red-600">{error}</div>;
@@ -480,6 +353,12 @@ export default function AttendanceManagement() {
     (eventType === "allenamento" ? !!date : !!selectedRace) &&
     !!selectedType &&
     selectedCategories.length > 0;
+
+  // Vero solo quando ogni atleta dell'elenco ha già uno stato impostato:
+  // solo a quel punto compare il pulsante per salvare tutto.
+  const allStatusesSet =
+    filteredAthletes.length > 0 &&
+    filteredAthletes.every((athlete) => attendances[athlete.id]?.present);
 
   return (
     <div className="container">
@@ -681,36 +560,6 @@ export default function AttendanceManagement() {
       </div>
 
       {/* Elenco Presenze - schede a scorrimento a scatto, un atleta alla volta */}
-      {filteredAthletes.length > 0 && (
-        <label
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "10px",
-            marginBottom: "10px",
-            fontSize: "14px",
-            fontWeight: "600",
-            cursor: "pointer",
-          }}
-        >
-          <input
-            type="checkbox"
-            checked={
-              filteredAthletes.length > 0 &&
-              selectedAthletes.size === filteredAthletes.length
-            }
-            onChange={handleSelectAll}
-            style={{
-              width: "20px",
-              height: "20px",
-              cursor: "pointer",
-              accentColor: "#3b82f6",
-              transform: "scale(1.5)",
-            }}
-          />
-          Seleziona tutti
-        </label>
-      )}
       <div
         style={{
           maxHeight: "calc(100vh - 260px)",
@@ -728,9 +577,14 @@ export default function AttendanceManagement() {
             </div>
           </div>
         ) : (
-          filteredAthletes.map((athlete) => (
+          filteredAthletes.map((athlete) => {
+            const isLocked =
+              attendances[athlete.id]?.present && !editMode[athlete.id];
+
+            return (
             <div
               key={athlete.id}
+              ref={(el) => (cardRefs.current[athlete.id] = el)}
               style={{
                 minHeight: "min(55vh, 380px)",
                 display: "flex",
@@ -747,175 +601,104 @@ export default function AttendanceManagement() {
             >
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "10px",
-                  marginBottom: "16px",
+                  fontWeight: "600",
+                  fontSize: "18px",
+                  marginBottom: "20px",
+                  textAlign: "center",
                 }}
               >
-                <input
-                  type="checkbox"
-                  checked={selectedAthletes.has(athlete.id)}
-                  onChange={() => handleSelectAthlete(athlete.id)}
-                  style={{
-                    width: "20px",
-                    height: "20px",
-                    cursor: "pointer",
-                    accentColor: "#3b82f6",
-                    transform: "scale(1.5)",
-                  }}
-                />
-                <div style={{ fontWeight: "600", fontSize: "16px" }}>
-                  {athlete.lastName} {athlete.name}
-                </div>
+                {athlete.lastName} {athlete.name}
               </div>
 
-              <div style={{ marginBottom: "12px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    marginBottom: "4px",
-                    color: "#666",
-                  }}
-                >
-                  Stato
-                </label>
-                <select
-                  value={attendances[athlete.id]?.present || ""}
-                  onChange={(e) =>
-                    handleAttendanceChange(
-                      athlete.id,
-                      "present",
-                      e.target.value
-                    )
-                  }
-                  className="form-select"
-                  disabled={
-                    existingAttendances[athlete.id] && !editMode[athlete.id]
-                  }
-                >
-                  <option value="">Seleziona</option>
-                  {presenceOptions.map((option) => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div style={{ marginBottom: "16px" }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "13px",
-                    marginBottom: "4px",
-                    color: "#666",
-                  }}
-                >
-                  Note
-                </label>
-                <input
-                  type="text"
-                  value={attendances[athlete.id]?.notes || ""}
-                  onChange={(e) =>
-                    handleAttendanceChange(athlete.id, "notes", e.target.value)
-                  }
-                  className="form-input"
-                  placeholder="Note"
-                  disabled={
-                    existingAttendances[athlete.id] && !editMode[athlete.id]
-                  }
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "8px" }}>
-                {existingAttendances[athlete.id] ? (
-                  editMode[athlete.id] ? (
-                    <>
-                      <button
-                        onClick={() => handleSaveRow(athlete.id)}
-                        className="btn btn-success"
-                      >
-                        Salva
-                      </button>
-                      <button
-                        onClick={() => handleDelete(athlete.id)}
-                        className="btn btn-danger"
-                      >
-                        Elimina
-                      </button>
-                    </>
-                  ) : (
+              {isLocked ? (
+                <>
+                  <p
+                    style={{
+                      textAlign: "center",
+                      fontSize: "15px",
+                      marginBottom: "16px",
+                    }}
+                  >
+                    Stato:{" "}
+                    <strong>{attendances[athlete.id].present}</strong>
+                  </p>
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      justifyContent: "center",
+                    }}
+                  >
                     <button
                       onClick={() => handleEnableEdit(athlete.id)}
                       className="btn btn-primary"
                     >
                       Modifica
                     </button>
-                  )
-                ) : (
+                    {existingAttendances[athlete.id] && (
+                      <button
+                        onClick={() => handleDelete(athlete.id)}
+                        className="btn btn-danger"
+                      >
+                        Elimina
+                      </button>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: "10px",
+                  }}
+                >
                   <button
-                    onClick={() => handleSaveRow(athlete.id)}
-                    className="btn btn-success"
+                    onClick={() => setStatusAndAdvance(athlete.id, "Presente")}
+                    className="quick-action-btn presente"
                   >
-                    Salva
+                    ✓ Presente
                   </button>
-                )}
-              </div>
+                  <button
+                    onClick={() => setStatusAndAdvance(athlete.id, "Assente")}
+                    className="quick-action-btn assente"
+                  >
+                    ✗ Assente
+                  </button>
+                  <button
+                    onClick={() =>
+                      setStatusAndAdvance(athlete.id, "Assente Giustificato")
+                    }
+                    className="quick-action-btn giustificato"
+                  >
+                    ⓘ Ass. Giust.
+                  </button>
+                  <button
+                    onClick={() => setStatusAndAdvance(athlete.id, "Ritardo")}
+                    className="quick-action-btn ritardo"
+                  >
+                    ⏰ Ritardo
+                  </button>
+                  <button
+                    onClick={() =>
+                      setStatusAndAdvance(athlete.id, "Uscita Anticipata")
+                    }
+                    className="quick-action-btn uscita"
+                    style={{ gridColumn: "span 2" }}
+                  >
+                    ⏪ Uscita Anticipata
+                  </button>
+                </div>
+              )}
             </div>
-          ))
+            );
+          })
         )}
       </div>
 
       {/* Pannello azioni rapide, fisso in basso mentre si scorre la lista atleti */}
-      {allFiltersCompleted && filteredAthletes.length > 0 && (
+      {allFiltersCompleted && filteredAthletes.length > 0 && allStatusesSet && (
         <div className="quick-actions-panel">
-          <div className="quick-actions-inner">
-            <p className="quick-actions-label">
-              {selectedAthletes.size > 0
-                ? `${selectedAthletes.size} atleti selezionati`
-                : "Seleziona gli atleti e applica uno stato:"}
-            </p>
-            <div className="quick-actions-buttons">
-              <button
-                onClick={() => applyStatusToSelected("Presente")}
-                className="quick-action-btn presente"
-                disabled={selectedAthletes.size === 0}
-              >
-                ✓ Presente
-              </button>
-              <button
-                onClick={() => applyStatusToSelected("Assente")}
-                className="quick-action-btn assente"
-                disabled={selectedAthletes.size === 0}
-              >
-                ✗ Assente
-              </button>
-              <button
-                onClick={() => applyStatusToSelected("Assente Giustificato")}
-                className="quick-action-btn giustificato"
-                disabled={selectedAthletes.size === 0}
-              >
-                ⓘ Ass. Giust.
-              </button>
-              <button
-                onClick={() => applyStatusToSelected("Ritardo")}
-                className="quick-action-btn ritardo"
-                disabled={selectedAthletes.size === 0}
-              >
-                ⏰ Ritardo
-              </button>
-              <button
-                onClick={() => applyStatusToSelected("Uscita Anticipata")}
-                className="quick-action-btn uscita quick-action-uscita"
-                disabled={selectedAthletes.size === 0}
-              >
-                ⏪ Uscita Anticipata
-              </button>
-            </div>
-          </div>
-
           <div className="quick-actions-save-wrap">
             <button onClick={handleSaveAll} className="quick-actions-save-btn">
               Salva tutte le presenze
