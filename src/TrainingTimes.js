@@ -23,6 +23,8 @@ export default function TrainingTimes() {
   const [personalBests, setPersonalBests] = useState({});
   const [selectedType, setSelectedType] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [trainingGroups, setTrainingGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [isCategoryDropdownOpen, setIsCategoryDropdownOpen] = useState(false);
   const categoryDropdownRef = useRef(null);
 
@@ -79,6 +81,20 @@ export default function TrainingTimes() {
       }
     };
     fetchAthletes();
+
+    const fetchGroups = async () => {
+      try {
+        const groupsSnapshot = await getDocs(
+          collection(db, "trainingGroups")
+        );
+        setTrainingGroups(
+          groupsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
+      } catch (error) {
+        console.error("Errore nel caricamento dei gruppi:", error);
+      }
+    };
+    fetchGroups();
 
     // Carica il miglior tempo personale di ogni atleta per ogni
     // combinazione stile+distanza, considerando sia gli allenamenti che le
@@ -671,6 +687,49 @@ export default function TrainingTimes() {
           />
         </div>
 
+        {trainingGroups.length > 0 && (
+          <div style={{ marginBottom: "16px" }}>
+            <label
+              style={{
+                display: "block",
+                marginBottom: "8px",
+                fontWeight: "600",
+                fontSize: "15px",
+              }}
+            >
+              Gruppo
+            </label>
+            <select
+              value={selectedGroup}
+              onChange={(e) => {
+                const groupId = e.target.value;
+                setSelectedGroup(groupId);
+                if (groupId) {
+                  const group = trainingGroups.find((g) => g.id === groupId);
+                  if (group) {
+                    setSelectedType(group.type);
+                    setSelectedCategories(group.categories);
+                  }
+                }
+              }}
+              style={{
+                width: "100%",
+                padding: "14px",
+                fontSize: "16px",
+                border: "1px solid #ddd",
+                borderRadius: "8px",
+              }}
+            >
+              <option value="">Seleziona gruppo (opzionale)</option>
+              {trainingGroups.map((group) => (
+                <option key={group.id} value={group.id}>
+                  {group.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+
         <div style={{ marginBottom: "16px" }}>
           <label
             style={{
@@ -687,6 +746,7 @@ export default function TrainingTimes() {
             onChange={(e) => {
               setSelectedType(e.target.value);
               setSelectedCategories([]);
+              setSelectedGroup("");
             }}
             style={{
               width: "100%",

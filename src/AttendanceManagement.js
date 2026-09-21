@@ -27,6 +27,8 @@ export default function AttendanceManagement() {
   const [filteredAthletes, setFilteredAthletes] = useState([]);
   const [selectedType, setSelectedType] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
+  const [trainingGroups, setTrainingGroups] = useState([]);
+  const [selectedGroup, setSelectedGroup] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [date, setDate] = useState("");
   const [eventType, setEventType] = useState("");
@@ -83,6 +85,11 @@ export default function AttendanceManagement() {
           });
         setAthletes(athletesList);
         setFilteredAthletes(athletesList);
+
+        const groupsSnapshot = await getDocs(collection(db, "trainingGroups"));
+        setTrainingGroups(
+          groupsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
+        );
 
         if (eventType === "gara") {
           const racesSnapshot = await getDocs(collection(db, "races"));
@@ -422,12 +429,44 @@ export default function AttendanceManagement() {
 
           {/* Filtri Atleti */}
           <div className="grid grid-cols-1">
+            {trainingGroups.length > 0 && (
+              <div>
+                <label className="form-label">Gruppo</label>
+                <select
+                  className="form-select"
+                  value={selectedGroup}
+                  onChange={(e) => {
+                    const groupId = e.target.value;
+                    setSelectedGroup(groupId);
+                    if (groupId) {
+                      const group = trainingGroups.find(
+                        (g) => g.id === groupId
+                      );
+                      if (group) {
+                        setSelectedType(group.type);
+                        setSelectedCategories(group.categories);
+                      }
+                    }
+                  }}
+                >
+                  <option value="">Seleziona gruppo (opzionale)</option>
+                  {trainingGroups.map((group) => (
+                    <option key={group.id} value={group.id}>
+                      {group.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="form-label">Tipologia</label>
               <select
                 className="form-select"
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
+                onChange={(e) => {
+                  setSelectedType(e.target.value);
+                  setSelectedGroup("");
+                }}
               >
                 <option value="">Tutte le tipologie</option>
                 <option value="Agonista">Agonista</option>
