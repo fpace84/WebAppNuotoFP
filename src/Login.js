@@ -43,18 +43,34 @@ export default function Login() {
       if (userDoc.exists()) {
         const userData = userDoc.data();
 
-        // Verifica l'atleta associato
-        const athletesRef = collection(db, "athletes");
-        const athletesSnapshot = await getDocs(athletesRef);
-        const athleteExists = athletesSnapshot.docs.some((doc) => {
-          const athleteData = doc.data();
-          return (
-            athleteData.name.toLowerCase() ===
-              userData.childName.toLowerCase() &&
-            athleteData.lastName.toLowerCase() ===
-              userData.childLastName.toLowerCase()
+        // Il controllo sull'atleta associato riguarda solo i genitori
+        let athleteExists = true;
+        if (userData.role === "user") {
+          const children =
+            userData.children ||
+            (userData.childName
+              ? [
+                  {
+                    childName: userData.childName,
+                    childLastName: userData.childLastName,
+                  },
+                ]
+              : []);
+
+          const athletesRef = collection(db, "athletes");
+          const athletesSnapshot = await getDocs(athletesRef);
+          athleteExists = children.some((child) =>
+            athletesSnapshot.docs.some((doc) => {
+              const athleteData = doc.data();
+              return (
+                athleteData.name.toLowerCase() ===
+                  child.childName.toLowerCase() &&
+                athleteData.lastName.toLowerCase() ===
+                  child.childLastName.toLowerCase()
+              );
+            })
           );
-        });
+        }
 
         if (athleteExists) {
           // Salva i dati nel localStorage

@@ -13,9 +13,8 @@ export default function CreateUser() {
     password: "",
     confirmPassword: "",
     name: "",
-    childName: "",
-    childLastName: "",
   });
+  const [children, setChildren] = useState([{ childName: "", childLastName: "" }]);
 
   // Funzione di validazione per controllare nomi e cognomi
   const validateNameFormat = (name, fieldName) => {
@@ -23,19 +22,35 @@ export default function CreateUser() {
     if (!name) {
       return `Il campo ${fieldName} è obbligatorio`;
     }
-    
+
     // Verifica spazi iniziali e finali
     if (name !== name.trim()) {
       return `Il ${fieldName} non deve contenere spazi all'inizio o alla fine`;
     }
-    
+
     // Verifica caratteri validi (lettere, spazi interni, apostrofi e trattini)
     const nameRegex = /^[A-Za-zÀ-ÖØ-öø-ÿ]+([ '-][A-Za-zÀ-ÖØ-öø-ÿ]+)*$/;
     if (!nameRegex.test(name)) {
       return `Il ${fieldName} contiene caratteri non validi o spazi multipli consecutivi`;
     }
-    
+
     return null; // Validazione superata
+  };
+
+  const handleAddChild = () => {
+    setChildren([...children, { childName: "", childLastName: "" }]);
+  };
+
+  const handleRemoveChild = (index) => {
+    setChildren(children.filter((_, i) => i !== index));
+  };
+
+  const handleChildChange = (index, field, value) => {
+    setChildren(
+      children.map((child, i) =>
+        i === index ? { ...child, [field]: value } : child
+      )
+    );
   };
 
   const handleSubmit = async (e) => {
@@ -49,20 +64,27 @@ export default function CreateUser() {
         throw new Error("Le password non corrispondono");
       }
 
-      // Validazione nome e cognome del figlio
-      const nameError = validateNameFormat(userData.childName, "nome del figlio");
-      if (nameError) {
-        throw new Error(nameError);
-      }
+      // Validazione nome e cognome di ogni figlio
+      for (const child of children) {
+        const nameError = validateNameFormat(child.childName, "nome del figlio");
+        if (nameError) {
+          throw new Error(nameError);
+        }
 
-      const lastNameError = validateNameFormat(userData.childLastName, "cognome del figlio");
-      if (lastNameError) {
-        throw new Error(lastNameError);
+        const lastNameError = validateNameFormat(
+          child.childLastName,
+          "cognome del figlio"
+        );
+        if (lastNameError) {
+          throw new Error(lastNameError);
+        }
       }
 
       // Normalizza i campi (trim per rimuovere eventuali spazi)
-      const normalizedChildName = userData.childName.trim();
-      const normalizedChildLastName = userData.childLastName.trim();
+      const normalizedChildren = children.map((child) => ({
+        childName: child.childName.trim(),
+        childLastName: child.childLastName.trim(),
+      }));
 
       // Crea utente in Authentication
       const userCredential = await createUserWithEmailAndPassword(
@@ -77,8 +99,7 @@ export default function CreateUser() {
           email: userData.email,
           name: userData.name,
           role: "user",
-          childName: normalizedChildName,
-          childLastName: normalizedChildLastName,
+          children: normalizedChildren,
           createdAt: new Date(),
         });
 
@@ -115,30 +136,14 @@ export default function CreateUser() {
   // Gestione del cambio di input con validazione immediata
   const handleInputChange = (field, value) => {
     setUserData({ ...userData, [field]: value });
-    
-    // Validazione in tempo reale per alcuni campi specifici
-    if (field === "childName" && value) {
-      const nameError = validateNameFormat(value, "nome del figlio");
-      if (nameError) {
-        setError(nameError);
-      } else if (error && error.includes("nome del figlio")) {
-        setError("");
-      }
-    }
-    
-    if (field === "childLastName" && value) {
-      const lastNameError = validateNameFormat(value, "cognome del figlio");
-      if (lastNameError) {
-        setError(lastNameError);
-      } else if (error && error.includes("cognome del figlio")) {
-        setError("");
-      }
-    }
-    
+
     // Reset errore password
-    if ((field === "password" || field === "confirmPassword") && 
-        userData.password && userData.confirmPassword &&
-        error === "Le password non corrispondono") {
+    if (
+      (field === "password" || field === "confirmPassword") &&
+      userData.password &&
+      userData.confirmPassword &&
+      error === "Le password non corrispondono"
+    ) {
       setError("");
     }
   };
@@ -215,56 +220,70 @@ export default function CreateUser() {
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Nome del Figlio/a
-              </label>
-              <input
-                type="text"
-                required
-                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
-                  error && error.includes("nome del figlio")
-                    ? "border-red-500 bg-red-50"
-                    : "focus:ring-indigo-500 focus:border-indigo-500"
-                }`}
-                value={userData.childName}
-                onChange={(e) => handleInputChange("childName", e.target.value)}
-                onBlur={(e) => {
-                  const nameError = validateNameFormat(e.target.value, "nome del figlio");
-                  if (nameError) setError(nameError);
-                }}
-              />
-              {!(error && error.includes("nome del figlio")) && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Inserisci il nome esatto dell'atleta (senza spazi aggiuntivi)
-                </p>
-              )}
-            </div>
+            <div className="border-t pt-4">
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  Figli/e
+                </label>
+                <button
+                  type="button"
+                  onClick={handleAddChild}
+                  className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                >
+                  + Aggiungi un altro figlio
+                </button>
+              </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Cognome del Figlio/a
-              </label>
-              <input
-                type="text"
-                required
-                className={`mt-1 block w-full border-gray-300 rounded-md shadow-sm ${
-                  error && error.includes("cognome del figlio")
-                    ? "border-red-500 bg-red-50"
-                    : "focus:ring-indigo-500 focus:border-indigo-500"
-                }`}
-                value={userData.childLastName}
-                onChange={(e) => handleInputChange("childLastName", e.target.value)}
-                onBlur={(e) => {
-                  const lastNameError = validateNameFormat(e.target.value, "cognome del figlio");
-                  if (lastNameError) setError(lastNameError);
-                }}
-              />
-              {!(error && error.includes("cognome del figlio")) && (
-                <p className="mt-1 text-xs text-gray-500">
-                  Inserisci il cognome esatto dell'atleta (senza spazi aggiuntivi)
-                </p>
-              )}
+              {children.map((child, index) => (
+                <div
+                  key={index}
+                  className="mb-4 p-3 border border-gray-200 rounded-md bg-gray-50"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <span className="text-xs font-medium text-gray-500">
+                      Figlio/a {index + 1}
+                    </span>
+                    {children.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveChild(index)}
+                        className="text-xs text-red-600 hover:text-red-500"
+                      >
+                        Rimuovi
+                      </button>
+                    )}
+                  </div>
+
+                  <label className="block text-xs font-medium text-gray-700">
+                    Nome
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="mt-1 mb-2 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    value={child.childName}
+                    onChange={(e) =>
+                      handleChildChange(index, "childName", e.target.value)
+                    }
+                  />
+
+                  <label className="block text-xs font-medium text-gray-700">
+                    Cognome
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                    value={child.childLastName}
+                    onChange={(e) =>
+                      handleChildChange(index, "childLastName", e.target.value)
+                    }
+                  />
+                </div>
+              ))}
+              <p className="text-xs text-gray-500">
+                Inserisci nome e cognome esatti dell'atleta (senza spazi aggiuntivi)
+              </p>
             </div>
 
             {error && (
@@ -275,7 +294,7 @@ export default function CreateUser() {
 
             <button
               type="submit"
-              disabled={loading || error}
+              disabled={loading}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
             >
               {loading ? "Registrazione in corso..." : "Registrati"}

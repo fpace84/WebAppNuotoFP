@@ -15,7 +15,7 @@ import "./athleteList.css";
 export default function AthleteList() {
   const navigate = useNavigate();
   const [userRole, setUserRole] = useState("");
-  const [userChildInfo, setUserChildInfo] = useState(null);
+  const [userChildren, setUserChildren] = useState([]);
   const [athletes, setAthletes] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterCategory, setFilterCategory] = useState("");
@@ -47,10 +47,22 @@ export default function AthleteList() {
           const userDoc = await getDoc(doc(db, "users", userId));
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            setUserChildInfo({
-              name: userData.childName,
-              lastName: userData.childLastName,
-            });
+            const children =
+              userData.children ||
+              (userData.childName
+                ? [
+                    {
+                      childName: userData.childName,
+                      childLastName: userData.childLastName,
+                    },
+                  ]
+                : []);
+            setUserChildren(
+              children.map((child) => ({
+                name: child.childName,
+                lastName: child.childLastName,
+              }))
+            );
           }
         } catch (error) {
           console.error("Errore nel recupero info utente:", error);
@@ -104,12 +116,13 @@ export default function AthleteList() {
   const getFilteredAthletes = () => {
     let filtered = [...athletes];
 
-    // Se è un utente normale (genitore), mostra solo il proprio figlio
-    if (userRole === "user" && userChildInfo) {
-      filtered = filtered.filter(
-        (athlete) =>
-          athlete.name === userChildInfo.name &&
-          athlete.lastName === userChildInfo.lastName
+    // Se è un utente normale (genitore), mostra tutti i propri figli
+    if (userRole === "user" && userChildren.length > 0) {
+      filtered = filtered.filter((athlete) =>
+        userChildren.some(
+          (child) =>
+            athlete.name === child.name && athlete.lastName === child.lastName
+        )
       );
     } else {
       // Applica i filtri per admin e coach

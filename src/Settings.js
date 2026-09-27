@@ -75,16 +75,14 @@ export default function Settings() {
     password: "",
     name: "",
     role: "",
-    childName: "",
-    childLastName: "",
+    children: [{ childName: "", childLastName: "" }],
   });
 
   const [editingUser, setEditingUser] = useState(null);
   const [editUserData, setEditUserData] = useState({
     name: "",
     role: "",
-    childName: "",
-    childLastName: "",
+    children: [{ childName: "", childLastName: "" }],
   });
 
   const loadUsers = async () => {
@@ -163,6 +161,29 @@ export default function Settings() {
     }
   };
 
+  const handleAddChild = (formSetter) => {
+    formSetter((prev) => ({
+      ...prev,
+      children: [...prev.children, { childName: "", childLastName: "" }],
+    }));
+  };
+
+  const handleRemoveChild = (formSetter, index) => {
+    formSetter((prev) => ({
+      ...prev,
+      children: prev.children.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleChildFieldChange = (formSetter, index, field, value) => {
+    formSetter((prev) => ({
+      ...prev,
+      children: prev.children.map((child, i) =>
+        i === index ? { ...child, [field]: value } : child
+      ),
+    }));
+  };
+
   const handleCreateUser = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -171,9 +192,9 @@ export default function Settings() {
 
     if (
       newUser.role === "user" &&
-      (!newUser.childName || !newUser.childLastName)
+      newUser.children.some((c) => !c.childName || !c.childLastName)
     ) {
-      setError("Per i genitori, nome e cognome del figlio sono obbligatori");
+      setError("Per i genitori, nome e cognome di ogni figlio sono obbligatori");
       setLoading(false);
       return;
     }
@@ -194,8 +215,7 @@ export default function Settings() {
         };
 
         if (newUser.role === "user") {
-          userData.childName = newUser.childName;
-          userData.childLastName = newUser.childLastName;
+          userData.children = newUser.children;
         }
 
         await setDoc(doc(db, "users", userCredential.user.uid), userData);
@@ -205,8 +225,7 @@ export default function Settings() {
           password: "",
           name: "",
           role: "",
-          childName: "",
-          childLastName: "",
+          children: [{ childName: "", childLastName: "" }],
         });
         setView("list");
         await loadUsers();
@@ -241,11 +260,15 @@ export default function Settings() {
 
   const handleEditUser = (user) => {
     setEditingUser(user);
+    const children =
+      user.children ||
+      (user.childName
+        ? [{ childName: user.childName, childLastName: user.childLastName }]
+        : [{ childName: "", childLastName: "" }]);
     setEditUserData({
       name: user.name || "",
       role: user.role || "coach",
-      childName: user.childName || "",
-      childLastName: user.childLastName || "",
+      children: children.length > 0 ? children : [{ childName: "", childLastName: "" }],
     });
     setView("edit");
     setError("");
@@ -261,9 +284,11 @@ export default function Settings() {
     try {
       if (
         editUserData.role === "user" &&
-        (!editUserData.childName || !editUserData.childLastName)
+        editUserData.children.some((c) => !c.childName || !c.childLastName)
       ) {
-        setError("Per i genitori, nome e cognome del figlio sono obbligatori");
+        setError(
+          "Per i genitori, nome e cognome di ogni figlio sono obbligatori"
+        );
         setLoading(false);
         return;
       }
@@ -274,9 +299,11 @@ export default function Settings() {
       };
 
       if (editUserData.role === "user") {
-        userData.childName = editUserData.childName;
-        userData.childLastName = editUserData.childLastName;
+        userData.children = editUserData.children;
+        userData.childName = null;
+        userData.childLastName = null;
       } else {
+        userData.children = null;
         const userDoc = await getDoc(doc(db, "users", editingUser.id));
         if (userDoc.exists() && userDoc.data().role === "user") {
           userData.childName = null;
@@ -338,6 +365,18 @@ export default function Settings() {
       default:
         return role;
     }
+  };
+
+  const getChildrenDisplay = (user) => {
+    const children =
+      user.children ||
+      (user.childName
+        ? [{ childName: user.childName, childLastName: user.childLastName }]
+        : []);
+    if (children.length === 0) return "-";
+    return children
+      .map((c) => `${c.childName} ${c.childLastName}`)
+      .join(", ");
   };
 
   if (loading && users.length === 0) {
@@ -467,30 +506,69 @@ export default function Settings() {
             </div>
 
             {newUser.role === "user" && (
-              <>
-                <div className="form-group">
-                  <label>Nome del Figlio/a</label>
-                  <input
-                    type="text"
-                    required
-                    value={newUser.childName}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, childName: e.target.value })
-                    }
-                  />
+              <div className="form-group">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <label>Figli/e</label>
+                  <button
+                    type="button"
+                    onClick={() => handleAddChild(setNewUser)}
+                    className="button-secondary"
+                    style={{ padding: "4px 10px", fontSize: "13px" }}
+                  >
+                    + Aggiungi figlio
+                  </button>
                 </div>
-                <div className="form-group">
-                  <label>Cognome del Figlio/a</label>
-                  <input
-                    type="text"
-                    required
-                    value={newUser.childLastName}
-                    onChange={(e) =>
-                      setNewUser({ ...newUser, childLastName: e.target.value })
-                    }
-                  />
-                </div>
-              </>
+                {newUser.children.map((child, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nome"
+                      value={child.childName}
+                      onChange={(e) =>
+                        handleChildFieldChange(
+                          setNewUser,
+                          index,
+                          "childName",
+                          e.target.value
+                        )
+                      }
+                    />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Cognome"
+                      value={child.childLastName}
+                      onChange={(e) =>
+                        handleChildFieldChange(
+                          setNewUser,
+                          index,
+                          "childLastName",
+                          e.target.value
+                        )
+                      }
+                    />
+                    {newUser.children.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveChild(setNewUser, index)}
+                        className="button-delete"
+                        style={{ padding: "4px 10px", fontSize: "13px" }}
+                      >
+                        Rimuovi
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
 
             <button type="submit" className="button-submit" disabled={loading}>
@@ -544,36 +622,71 @@ export default function Settings() {
             </div>
 
             {editUserData.role === "user" && (
-              <>
-                <div className="form-group">
-                  <label>Nome del Figlio/a</label>
-                  <input
-                    type="text"
-                    required
-                    value={editUserData.childName}
-                    onChange={(e) =>
-                      setEditUserData({
-                        ...editUserData,
-                        childName: e.target.value,
-                      })
-                    }
-                  />
+              <div className="form-group">
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <label>Figli/e</label>
+                  <button
+                    type="button"
+                    onClick={() => handleAddChild(setEditUserData)}
+                    className="button-secondary"
+                    style={{ padding: "4px 10px", fontSize: "13px" }}
+                  >
+                    + Aggiungi figlio
+                  </button>
                 </div>
-                <div className="form-group">
-                  <label>Cognome del Figlio/a</label>
-                  <input
-                    type="text"
-                    required
-                    value={editUserData.childLastName}
-                    onChange={(e) =>
-                      setEditUserData({
-                        ...editUserData,
-                        childLastName: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </>
+                {editUserData.children.map((child, index) => (
+                  <div
+                    key={index}
+                    style={{
+                      display: "flex",
+                      gap: "8px",
+                      alignItems: "center",
+                      marginBottom: "8px",
+                    }}
+                  >
+                    <input
+                      type="text"
+                      required
+                      placeholder="Nome"
+                      value={child.childName}
+                      onChange={(e) =>
+                        handleChildFieldChange(
+                          setEditUserData,
+                          index,
+                          "childName",
+                          e.target.value
+                        )
+                      }
+                    />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Cognome"
+                      value={child.childLastName}
+                      onChange={(e) =>
+                        handleChildFieldChange(
+                          setEditUserData,
+                          index,
+                          "childLastName",
+                          e.target.value
+                        )
+                      }
+                    />
+                    {editUserData.children.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          handleRemoveChild(setEditUserData, index)
+                        }
+                        className="button-delete"
+                        style={{ padding: "4px 10px", fontSize: "13px" }}
+                      >
+                        Rimuovi
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
             )}
 
             <button type="submit" className="button-submit" disabled={loading}>
@@ -599,8 +712,7 @@ export default function Settings() {
                   </p>
                   {user.role === "user" && (
                     <p className="user-child">
-                      <strong>Figlio/a:</strong> {user.childName}{" "}
-                      {user.childLastName}
+                      <strong>Figli/e:</strong> {getChildrenDisplay(user)}
                     </p>
                   )}
                 </div>
@@ -642,9 +754,7 @@ export default function Settings() {
                   <td>{user.email}</td>
                   <td>{getRoleDisplay(user.role)}</td>
                   <td>
-                    {user.role === "user"
-                      ? `${user.childName} ${user.childLastName}`
-                      : "-"}
+                    {user.role === "user" ? getChildrenDisplay(user) : "-"}
                   </td>
                   <td className="actions-cell">
                     <button

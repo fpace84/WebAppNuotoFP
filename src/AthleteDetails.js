@@ -139,10 +139,24 @@ export default function AthleteDetails() {
           const userDoc = await getDoc(doc(db, "users", userId));
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            if (
-              athleteData.name !== userData.childName ||
-              athleteData.lastName !== userData.childLastName
-            ) {
+            const children =
+              userData.children ||
+              (userData.childName
+                ? [
+                    {
+                      childName: userData.childName,
+                      childLastName: userData.childLastName,
+                    },
+                  ]
+                : []);
+
+            const isOwnChild = children.some(
+              (child) =>
+                athleteData.name === child.childName &&
+                athleteData.lastName === child.childLastName
+            );
+
+            if (!isOwnChild) {
               navigate("/unauthorized");
               return;
             }
