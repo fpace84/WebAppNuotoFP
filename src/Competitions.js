@@ -6,6 +6,9 @@ import "./competitions.css";
 
 export default function Competitions() {
   const navigate = useNavigate();
+  const canManage = ["admin", "coach"].includes(
+    localStorage.getItem("user_role")
+  );
   const [races, setRaces] = useState([]);
   const [filter, setFilter] = useState("upcoming");
   const [searchTerm, setSearchTerm] = useState("");
@@ -140,21 +143,23 @@ export default function Competitions() {
     <div className="competitions-container">
       <h1 className="competitions-title">Competizioni</h1>
 
-      {/* Pulsanti di azione */}
-      <div className="action-buttons">
-        <button
-          onClick={handleNavigateToCompetitionResults}
-          className="results-button"
-        >
-          Inserisci Risultati
-        </button>
-        <button
-          onClick={handleNavigateToNewCompetition}
-          className="new-comp-button"
-        >
-          Inserisci Gara
-        </button>
-      </div>
+      {/* Pulsanti di azione (solo admin e allenatori) */}
+      {canManage && (
+        <div className="action-buttons">
+          <button
+            onClick={handleNavigateToCompetitionResults}
+            className="results-button"
+          >
+            Inserisci Risultati
+          </button>
+          <button
+            onClick={handleNavigateToNewCompetition}
+            className="new-comp-button"
+          >
+            Inserisci Gara
+          </button>
+        </div>
+      )}
 
       {/* Filtri */}
       <div className="filter-buttons">
@@ -207,14 +212,16 @@ export default function Competitions() {
 
               <div className="competition-level">{race.level}</div>
 
-              <div className="competition-actions">
-                <button
-                  onClick={() => handleDelete(race.id)}
-                  className="delete-button"
-                >
-                  Elimina
-                </button>
-              </div>
+              {canManage && (
+                <div className="competition-actions">
+                  <button
+                    onClick={() => handleDelete(race.id)}
+                    className="delete-button"
+                  >
+                    Elimina
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 
