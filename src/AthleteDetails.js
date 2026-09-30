@@ -464,29 +464,6 @@ export default function AthleteDetails() {
 
     return (
       <div>
-        <div className="flex gap-2 mb-4">
-          <button
-            onClick={() => setViewMode("list")}
-            className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
-              viewMode === "list"
-                ? "bg-purple-600 text-white shadow-md"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Lista
-          </button>
-          <button
-            onClick={() => setViewMode("calendar")}
-            className={`px-6 py-2 rounded-lg font-medium transition-all duration-200 ${
-              viewMode === "calendar"
-                ? "bg-purple-600 text-white shadow-md"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-            }`}
-          >
-            Calendario
-          </button>
-        </div>
-
         <div className="flex items-center justify-between mb-4">
           <button
             onClick={() => {
@@ -495,8 +472,9 @@ export default function AthleteDetails() {
               setCurrentMonth(newDate);
             }}
             className="bg-orange-500 text-white px-5 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors duration-200 shadow-md"
+            aria-label="Mese precedente"
           >
-            ← Mese precedente
+            ←
           </button>
           <h3 className="text-lg font-semibold">
             {monthNames[month]} {year}
@@ -508,8 +486,9 @@ export default function AthleteDetails() {
               setCurrentMonth(newDate);
             }}
             className="bg-orange-500 text-white px-5 py-2 rounded-lg font-medium hover:bg-orange-600 transition-colors duration-200 shadow-md"
+            aria-label="Mese successivo"
           >
-            Mese successivo →
+            →
           </button>
         </div>
 
