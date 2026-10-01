@@ -6,16 +6,18 @@
   color: #1f2937;
 }
 
-/* Griglia pulsanti */
+/* Griglia pulsanti: si adatta da sola allo spazio disponibile.
+   Ogni pulsante e largo almeno 240px; la griglia calcola da sola quante
+   colonne stanno comode (una su smartphone, piu' su schermi larghi),
+   senza bisogno di indicare dimensioni fisse o punti di rottura manuali. */
 .grid {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 15px;
   margin-bottom: 30px;
 }
 
 .dashboard-button {
-  flex: 1 1 200px;
   padding: 12px 20px;
   color: #fff;
   border: none;
@@ -585,10 +587,6 @@
   }
 
   .stats-container {
-    flex-direction: column;
-  }
-
-  .grid {
     flex-direction: column;
   }
 
