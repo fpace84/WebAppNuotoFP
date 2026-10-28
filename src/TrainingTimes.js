@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { db } from "./firebase";
 import { collection, addDoc, getDocs, query, where } from "firebase/firestore";
 import { calculateCategory } from "./categories";
@@ -50,6 +50,51 @@ export default function TrainingTimes() {
   const [sortOrder, setSortOrder] = useState("");
   const [heats, setHeats] = useState([]);
   const [heatsGenerated, setHeatsGenerated] = useState(false);
+  const heatsContainerRef = useRef(null);
+  const heatsBarRef = useRef(null);
+  const [heatsHeight, setHeatsHeight] = useState(null);
+
+  // Dimensiona l'area scorrevole delle batterie in modo che occupi
+  // esattamente lo spazio visibile tra la barra in alto dell'app e la barra
+  // fissa in basso (Rigenera / Salva Tutti). Cosi nessuna corsia resta
+  // nascosta sotto le barre e la scheda non e mai piu alta dello spazio
+  // disponibile (altrimenti lo scatto non permette di raggiungere le
+  // corsie piu in basso).
+  useLayoutEffect(() => {
+    if (!(mode === "group" && heatsGenerated)) return undefined;
+
+    const computeHeight = () => {
+      const header = document.querySelector(".header");
+      const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+      const barTop = heatsBarRef.current
+        ? heatsBarRef.current.getBoundingClientRect().top
+        : window.innerHeight;
+      setHeatsHeight(
+        Math.max(240, Math.floor(barTop - headerBottom - 16))
+      );
+    };
+
+    computeHeight();
+    window.addEventListener("resize", computeHeight);
+    window.addEventListener("orientationchange", computeHeight);
+    return () => {
+      window.removeEventListener("resize", computeHeight);
+      window.removeEventListener("orientationchange", computeHeight);
+    };
+  }, [mode, heatsGenerated, heats.length]);
+
+  // Appena le batterie sono generate, porta l'area scorrevole subito sotto
+  // la barra in alto, cosi si vede tutta senza dover scorrere la pagina.
+  useEffect(() => {
+    if (!(mode === "group" && heatsGenerated)) return;
+    const container = heatsContainerRef.current;
+    if (!container) return;
+    const header = document.querySelector(".header");
+    const headerBottom = header ? header.getBoundingClientRect().bottom : 0;
+    const top =
+      container.getBoundingClientRect().top + window.scrollY - (headerBottom + 8);
+    window.scrollTo({ top: Math.max(0, top), behavior: "smooth" });
+  }, [mode, heatsGenerated, heatsHeight === null]);
   const [heatTimes, setHeatTimes] = useState({});
   const [presentAthletes, setPresentAthletes] = useState([]);
 
@@ -1541,190 +1586,231 @@ export default function TrainingTimes() {
           </div>
 
           <div
+            ref={heatsContainerRef}
             style={{
-              maxHeight: "calc(100vh - 260px)",
+              height: heatsHeight ? `${heatsHeight}px` : "calc(100dvh - 260px)",
               overflowY: "auto",
               scrollSnapType: "y mandatory",
               WebkitOverflowScrolling: "touch",
               borderRadius: "12px",
             }}
           >
-          {heats.map((heat) => (
-            <div
-              key={heat.heatNumber}
-              className={heats.length > 3 ? "compact-card" : ""}
-              style={{
-                minHeight: "min(55vh, 380px)",
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                scrollSnapAlign: "start",
-                scrollSnapStop: "always",
-                boxSizing: "border-box",
-                marginBottom: "24px",
-                padding: "16px",
-                backgroundColor: "#f8f9fa",
-                borderRadius: "12px",
-              }}
-            >
-              <div
-                className="compact-title"
-                style={{
-                  fontWeight: "700",
-                  fontSize: "18px",
-                  marginBottom: "16px",
-                  color: "#007AFF",
-                }}
-              >
-                Batteria {heat.heatNumber}
-                {heat.gender !== "mixed" &&
-                  ` - ${heat.gender === "M" ? "Maschi" : "Femmine"}`}
-              </div>
+            {heats.map((heat) => {
+              // Da 4 corsie in su ogni corsia diventa una riga compatta
+              // (numero, nome e i tre campi tempo affiancati) cosi tutte le
+              // corsie restano visibili insieme senza dover scorrere.
+              const compactLanes = heat.athletes.length > 3;
+              const timeFields = [
+                { field: "minutes", label: "Min" },
+                { field: "seconds", label: "Sec" },
+                { field: "decimal", label: "Dec" },
+              ];
 
-              {heat.athletes.map((athlete, index) => (
+              return (
                 <div
-                  key={athlete.id}
+                  key={heat.heatNumber}
                   style={{
-                    marginBottom: "16px",
-                    padding: "12px",
-                    backgroundColor: "white",
-                    borderRadius: "8px",
+                    height: "100%",
+                    overflowY: "auto",
+                    WebkitOverflowScrolling: "touch",
+                    scrollSnapAlign: "start",
+                    scrollSnapStop: "always",
+                    boxSizing: "border-box",
+                    display: "flex",
+                    flexDirection: "column",
+                    padding: compactLanes ? "10px" : "16px",
+                    marginBottom: "12px",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "12px",
                   }}
                 >
-                  <div
-                    style={{
-                      fontSize: "15px",
-                      fontWeight: "600",
-                      marginBottom: "12px",
-                    }}
-                  >
-                    Corsia {index + 1}: {athlete.lastName} {athlete.name}
-                    {getPersonalBest(athlete.id, groupStyle, groupDistance) && (
-                      <span style={{ color: "#059669", fontWeight: "normal" }}>
-                        {" "}
-                        (Personale:{" "}
-                        {getPersonalBest(athlete.id, groupStyle, groupDistance)}
-                        )
-                      </span>
-                    )}
-                  </div>
+                  {/* Il margine automatico centra il contenuto se c'e spazio
+                      e non lo taglia se manca (a differenza di
+                      justify-content: center). */}
+                  <div style={{ margin: "auto 0", flexShrink: 0 }}>
+                    <div
+                      style={{
+                        fontWeight: "700",
+                        fontSize: compactLanes ? "16px" : "18px",
+                        marginBottom: compactLanes ? "8px" : "16px",
+                        color: "#007AFF",
+                      }}
+                    >
+                      Batteria {heat.heatNumber}
+                      {heat.gender !== "mixed" &&
+                        ` - ${heat.gender === "M" ? "Maschi" : "Femmine"}`}
+                    </div>
 
-                  <div style={{ display: "flex", gap: "8px" }}>
-                    <div style={{ flex: 1 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: "12px",
-                          marginBottom: "4px",
-                          color: "#666",
-                        }}
-                      >
-                        Min
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="00"
-                        value={heatTimes[athlete.id]?.minutes || ""}
-                        onChange={(e) =>
-                          updateHeatTime(
-                            athlete.id,
-                            "minutes",
-                            e.target.value
-                              .replace(/[^0-9]/g, "")
-                              .substring(0, 2)
-                          )
-                        }
-                        style={{
-                          width: "100%",
-                          padding: "16px",
-                          fontSize: "24px",
-                          textAlign: "center",
-                          border: "2px solid #007AFF",
-                          borderRadius: "8px",
-                        }}
-                      />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: "12px",
-                          marginBottom: "4px",
-                          color: "#666",
-                        }}
-                      >
-                        Sec
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="00"
-                        value={heatTimes[athlete.id]?.seconds || ""}
-                        onChange={(e) =>
-                          updateHeatTime(
-                            athlete.id,
-                            "seconds",
-                            e.target.value
-                              .replace(/[^0-9]/g, "")
-                              .substring(0, 2)
-                          )
-                        }
-                        style={{
-                          width: "100%",
-                          padding: "16px",
-                          fontSize: "24px",
-                          textAlign: "center",
-                          border: "2px solid #007AFF",
-                          borderRadius: "8px",
-                        }}
-                      />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                      <label
-                        style={{
-                          display: "block",
-                          fontSize: "12px",
-                          marginBottom: "4px",
-                          color: "#666",
-                        }}
-                      >
-                        Dec
-                      </label>
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        placeholder="00"
-                        value={heatTimes[athlete.id]?.decimal || ""}
-                        onChange={(e) =>
-                          updateHeatTime(
-                            athlete.id,
-                            "decimal",
-                            e.target.value
-                              .replace(/[^0-9]/g, "")
-                              .substring(0, 2)
-                          )
-                        }
-                        style={{
-                          width: "100%",
-                          padding: "16px",
-                          fontSize: "24px",
-                          textAlign: "center",
-                          border: "2px solid #007AFF",
-                          borderRadius: "8px",
-                        }}
-                      />
-                    </div>
+                    {heat.athletes.map((athlete, index) => {
+                      const personalBest = getPersonalBest(
+                        athlete.id,
+                        groupStyle,
+                        groupDistance
+                      );
+
+                      if (compactLanes) {
+                        return (
+                          <div
+                            key={athlete.id}
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              gap: "6px",
+                              padding: "6px",
+                              marginBottom: "6px",
+                              backgroundColor: "white",
+                              borderRadius: "8px",
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: "20px",
+                                flexShrink: 0,
+                                textAlign: "center",
+                                fontSize: "15px",
+                                fontWeight: "700",
+                                color: "#007AFF",
+                              }}
+                            >
+                              {index + 1}
+                            </div>
+                            <div
+                              style={{ flex: "1 1 0", minWidth: 0, lineHeight: 1.2 }}
+                            >
+                              <div
+                                style={{
+                                  fontSize: "13px",
+                                  fontWeight: "600",
+                                  wordBreak: "break-word",
+                                }}
+                              >
+                                {athlete.lastName} {athlete.name}
+                              </div>
+                              {personalBest && (
+                                <div style={{ fontSize: "11px", color: "#059669" }}>
+                                  PB {personalBest}
+                                </div>
+                              )}
+                            </div>
+                            {timeFields.map(({ field, label }) => (
+                              <input
+                                key={field}
+                                className="lane-input"
+                                type="number"
+                                inputMode="numeric"
+                                placeholder={label}
+                                aria-label={`${label} ${athlete.lastName} ${athlete.name}`}
+                                value={heatTimes[athlete.id]?.[field] || ""}
+                                onChange={(e) =>
+                                  updateHeatTime(
+                                    athlete.id,
+                                    field,
+                                    e.target.value
+                                      .replace(/[^0-9]/g, "")
+                                      .substring(0, 2)
+                                  )
+                                }
+                                style={{
+                                  width: "50px",
+                                  flexShrink: 0,
+                                  boxSizing: "border-box",
+                                  padding: "8px 2px",
+                                  fontSize: "18px",
+                                  textAlign: "center",
+                                  border: "2px solid #007AFF",
+                                  borderRadius: "8px",
+                                }}
+                              />
+                            ))}
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div
+                          key={athlete.id}
+                          style={{
+                            marginBottom: "16px",
+                            padding: "12px",
+                            backgroundColor: "white",
+                            borderRadius: "8px",
+                          }}
+                        >
+                          <div
+                            style={{
+                              fontSize: "15px",
+                              fontWeight: "600",
+                              marginBottom: "12px",
+                            }}
+                          >
+                            Corsia {index + 1}: {athlete.lastName} {athlete.name}
+                            {personalBest && (
+                              <span
+                                style={{ color: "#059669", fontWeight: "normal" }}
+                              >
+                                {" "}
+                                (Personale: {personalBest})
+                              </span>
+                            )}
+                          </div>
+
+                          <div style={{ display: "flex", gap: "8px" }}>
+                            {timeFields.map(({ field, label }) => (
+                              <div key={field} style={{ flex: 1 }}>
+                                <label
+                                  style={{
+                                    display: "block",
+                                    fontSize: "12px",
+                                    marginBottom: "4px",
+                                    color: "#666",
+                                  }}
+                                >
+                                  {label}
+                                </label>
+                                <input
+                                  type="number"
+                                  inputMode="numeric"
+                                  placeholder="00"
+                                  value={heatTimes[athlete.id]?.[field] || ""}
+                                  onChange={(e) =>
+                                    updateHeatTime(
+                                      athlete.id,
+                                      field,
+                                      e.target.value
+                                        .replace(/[^0-9]/g, "")
+                                        .substring(0, 2)
+                                    )
+                                  }
+                                  style={{
+                                    width: "100%",
+                                    padding: "16px",
+                                    fontSize: "24px",
+                                    textAlign: "center",
+                                    border: "2px solid #007AFF",
+                                    borderRadius: "8px",
+                                  }}
+                                />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
-              ))}
-            </div>
-          ))}
+              );
+            })}
           </div>
 
+          {/* Spazio in fondo: permette di portare l'area scorrevole subito
+              sotto la barra in alto senza che la barra fissa in basso la copra */}
+          <div style={{ height: "110px" }} />
+
           <div
+            ref={heatsBarRef}
             style={{
               position: "fixed",
+              zIndex: 20,
               bottom: 0,
               left: 0,
               right: 0,

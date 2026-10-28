@@ -188,3 +188,21 @@ button.danger {
   font-size: 12px !important;
 }
 
+
+/* Campi tempo compatti (corsie da 4 in su): placeholder piccolo e senza le
+   frecce su/giu dei campi numerici, che su desktop coprirebbero le cifre */
+.lane-input::placeholder {
+  font-size: 11px;
+  color: #9ca3af;
+}
+
+.lane-input::-webkit-outer-spin-button,
+.lane-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.lane-input {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
